@@ -233,7 +233,6 @@ function exportStatus() {
     if (count("commun") < 3) warnings.push("Ajoute au moins 3 points communs.");
     if (count("urss") < 3) warnings.push("Ajoute au moins 3 éléments propres à l'URSS.");
     if (count("allemagne") < 3) warnings.push("Ajoute au moins 3 éléments propres à l'Allemagne nazie.");
-    if (sources < 5) warnings.push("Indique une source sur au moins 5 nœuds.");
   }
 
   return {
@@ -951,7 +950,6 @@ function checklistItems() {
     { id: "commun", ok: count("commun") >= 3, label: "Au moins 3 points communs.", tip: "Pense au parti unique, à la propagande, à la police politique." },
     { id: "urss", ok: count("urss") >= 3, label: "Au moins 3 éléments propres à l'URSS.", tip: "Collectivisation, plans, Goulag, Grande Terreur..." },
     { id: "allemagne", ok: count("allemagne") >= 3, label: "Au moins 3 éléments propres à l'Allemagne nazie.", tip: "Lois de Nuremberg, autarcie, réarmement, Führer..." },
-    { id: "sources", ok: sources >= 5, label: "Au moins 5 nœuds ont une source.", tip: "Indique le dossier ou le document dans le champ « Source »." },
     { id: "links", ok: links.length >= 4, label: "Au moins 4 liens relient les idées.", tip: "Relie les branches au sujet central, puis les exemples aux branches." },
     { id: "conclusion", ok: conclusionOk, label: "La conclusion fait au moins 3 phrases.", tip: "Rédige 3 à 5 phrases dans l'étape Vérifier." },
     {
@@ -1018,10 +1016,10 @@ function renderExportGate() {
   }
   if (!gate) return;
   const missing = status.missing.length
-    ? `<div class="gate-block"><p class="gate-title">Pour débloquer l'export</p><ul>${status.missing
+    ? `<div class="gate-block"><p class="gate-title">Pour envoyer le dossier</p><ul>${status.missing
         .map((item) => `<li>${esc(item)}</li>`)
         .join("")}</ul></div>`
-    : `<p class="gate-ok">Le dossier est complet : tu peux exporter.</p>`;
+    : `<p class="gate-ok">Le dossier est complet : tu peux l'envoyer au professeur.</p>`;
   const warnings = status.warnings.length
     ? `<div class="gate-block gate-warn"><p class="gate-title">Pour améliorer la carte</p><ul>${status.warnings
         .map((item) => `<li>${esc(item)}</li>`)
@@ -2554,7 +2552,8 @@ function bindStatic() {
   });
 
   $("#newActivity").addEventListener("click", () => resetActivity(true));
-  $("#previewButton").addEventListener("click", openPreview);
+  const previewButton = $("#previewButton");
+  if (previewButton) previewButton.addEventListener("click", openPreview);
   $("#printButton").addEventListener("click", printCurrent);
 
   bindDossierDialog();

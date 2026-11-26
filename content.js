@@ -96,7 +96,7 @@ export const DOSSIERS = [
     questions: [
       {
         id: "urss-q1",
-        prompt: "Qui détient le pouvoir ? Comment Staline s'impose-t-il ?",
+        prompt: "Qui détient le pouvoir et comment s'impose-t-il ?",
         hint: "Appuie-toi sur les dates : 1922, 1924, 1929.",
         placeholder: "Je repère que...",
         points: 0.5,
@@ -168,7 +168,7 @@ export const DOSSIERS = [
     questions: [
       {
         id: "all-q1",
-        prompt: "Hitler a-t-il été élu chancelier ? Justifie.",
+        prompt: "Comment Hitler devient-il chancelier en janvier 1933 ?",
         hint: "Relis la première phrase du dossier.",
         placeholder: "Non, car...",
         points: 0.5,
@@ -337,7 +337,7 @@ export const MECHANISMS = [
   },
   {
     id: "m2",
-    label: "Le chef fait l'objet d'un culte organisé.",
+    label: "Le chef fait l'objet d'un culte de la personnalité organisé.",
     answer: "both",
     points: 0.5,
     feedback:
@@ -345,7 +345,7 @@ export const MECHANISMS = [
   },
   {
     id: "m3",
-    label: "Une police politique arrête sans procès et envoie dans des camps.",
+    label: "Une police politique arrête les opposants sans jugement et les enferme dans des camps.",
     answer: "both",
     points: 0.5,
     feedback:

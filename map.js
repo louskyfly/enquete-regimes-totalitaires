@@ -577,10 +577,6 @@ function renderInspector() {
         <span>Source (dossier, page, document)</span>
         <input type="text" data-field="source" value="${esc(node.source)}" maxlength="160" placeholder="Ex. : Dossier 2, Le Reichstag" />
       </label>
-      <label class="field">
-        <span>Lien vers la source (facultatif)</span>
-        <input type="url" data-field="sourceUrl" value="${esc(node.sourceUrl)}" maxlength="500" placeholder="https://..." />
-      </label>
       <div class="inspector-actions">
         <button type="button" class="button secondary" data-action="start-link">Relier ce nœud</button>
         <button type="button" class="button danger" data-action="delete-node">Supprimer</button>
