@@ -47,7 +47,7 @@ export const DOSSIERS = [
       {
         title: "Un pouvoir personnel dans un parti unique",
         paragraphs: [
-          "Après la mort de Lénine en 1924, Staline, secrétaire général du Parti communiste depuis 1922, écarte progressivement ses rivaux. En 1929, il lance la « grande rupture » : collectivisation forcée des campagnes et premiers plans quinquennaux. Le parti unique contrôle l'État, la presse, les syndicats et les organisations de jeunesse.",
+          "Après la mort de Lénine en 1924, Staline, secrétaire général du Parti communiste depuis 1922, écarte progressivement ses rivaux. En 1929, il lance la « grande rupture » : collectivisation forcée des campagnes et premiers plans quinquennaux. Le parti unique contrôle l'État, la presse, les syndicats et les organisations de jeunesse. Le régime se réclame du marxisme-léninisme et de la dictature du prolétariat.",
           "La Constitution de 1936 proclame des droits et le suffrage universel, mais elle ne limite pas le pouvoir du parti. Dans les faits, les élections ne sont pas concurrentielles et la police politique dispose d'un pouvoir immense."
         ]
       },
@@ -86,7 +86,7 @@ export const DOSSIERS = [
       }
     ],
     takeaway:
-      "Le stalinisme est un pouvoir personnel de parti unique, fondé sur une idéologie révolutionnaire, une économie nationalisée et planifiée, et une violence de masse (collectivisation, famine, Grande Terreur, Goulag)."
+      "Le stalinisme est un pouvoir personnel de parti unique, fondé sur une idéologie marxiste-léniniste, une économie nationalisée et planifiée, et une violence de masse (collectivisation, famine, Grande Terreur, Goulag)."
   },
   {
     id: "allemagne-1933",
@@ -183,7 +183,7 @@ export const DOSSIERS = [
       {
         title: "Une idéologie au cœur du régime",
         paragraphs: [
-          "Les lois de Nuremberg ne sont pas un accident : elles inscrivent dans le droit l'idéologie raciste et antisémite du nazisme. Cette idéologie affirme une hiérarchie des « races », fait des Juifs un ennemi absolu et justifie la conquête d'un « espace vital » à l'Est.",
+          "Les lois de Nuremberg ne sont pas un accident : elles inscrivent dans le droit l'idéologie raciste, antisémite et ultranationaliste d'extrême droite du nazisme. Cette idéologie affirme une hiérarchie des « races », fait des Juifs un ennemi absolu et justifie la conquête d'un « espace vital » à l'Est.",
           "Entre 1933 et 1939, la persécution s'aggrave : boycott des commerces juifs, exclusion de la fonction publique, autodafés, nuit de Cristal en 1938. Après 1941, la persécution devient un génocide : environ 6 millions de Juifs sont assassinés. Les lois de 1935 sont une étape de ce processus, pas son point de départ ni son point final."
         ]
       }

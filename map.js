@@ -434,6 +434,10 @@ function startNodeDrag(event, node, el) {
         undoStack.push(before);
         if (undoStack.length > MAX_HISTORY) undoStack.shift();
         redoStack = [];
+        selectedNodeId = node.id;
+        selectedLinkId = null;
+        renderNodes();
+        renderInspector();
         notify();
         setStatus("Nœud déplacé.");
       }
@@ -666,6 +670,7 @@ function updateNodeField(field, value) {
   const node = nodeById(selectedNodeId);
   if (!node) return;
   if (field === "category") {
+    pushHistory();
     if (value === "central") {
       state.nodes.forEach((n) => {
         if (n.category === "central" && n.id !== node.id) n.category = "commun";
@@ -680,6 +685,7 @@ function updateNodeField(field, value) {
     return;
   }
   if (field === "shape") {
+    pushHistory();
     node.shape = SHAPES.some((s) => s.id === value) ? value : "rounded";
     const size = defaultSize(node.category, node.shape);
     node.w = size.w;
@@ -1264,7 +1270,7 @@ export function toPrintSVG() {
       const title = lines
         .map(
           (line, index) =>
-            `<text x="10" y="${34 + index * 15}" font-family="Georgia, 'Times New Roman', serif" font-size="13.5" font-weight="600" fill="${cat.text}">${escXml(
+            `<text x="10" y="${34 + index * 15}" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="600" fill="${cat.text}">${escXml(
               index === 1 && hasMore ? line.replace(/\s+\S*$/, "") + "…" : line
             )}</text>`
         )
