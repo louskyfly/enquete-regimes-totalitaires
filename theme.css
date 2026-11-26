@@ -36,6 +36,7 @@
   .app-header {
     border-bottom: 2px solid #b9a17f;
     padding-top: 20px;
+    z-index: 50;
   }
 
   .brand-kicker,
