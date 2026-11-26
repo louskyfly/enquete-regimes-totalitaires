@@ -427,6 +427,22 @@
     </div>
   </dialog>
 
+  <!-- QR code de la session -->
+  <dialog id="qrDialog" class="modal qr-modal" aria-labelledby="qrTitle">
+    <div class="modal-inner">
+      <div class="modal-head">
+        <div>
+          <p class="kicker">Rejoindre la classe</p>
+          <h2 id="qrTitle">QR code de la session</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog="qrDialog" aria-label="Fermer le QR code">×</button>
+      </div>
+      <div class="qr-large" id="qrLarge"></div>
+      <p class="qr-code-text" id="qrCodeText"></p>
+      <p class="hint">Les élèves scannent ce code avec l'appareil photo de la tablette : l'application s'ouvre avec la classe déjà réglée. Sans caméra, ils tapent le code dans « Envoyer au professeur ».</p>
+    </div>
+  </dialog>
+
   <!-- Carte agrandie pour la correction -->
   <dialog id="mapZoomDialog" class="modal modal-wide map-zoom-modal" aria-labelledby="mapZoomTitle">
     <div class="modal-inner">
@@ -446,6 +462,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+  <script src="vendor/qrcode-generator-1.4.4.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>

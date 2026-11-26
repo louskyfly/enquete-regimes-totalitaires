@@ -31,8 +31,8 @@ En haut à droite, le binôme renseigne sa classe et les prénoms/noms de **deux
 Les copies arrivent **directement dans l'onglet Correction**, pendant la séance. Aucun lien à transmettre, aucune messagerie.
 
 1. Le professeur ouvre l'onglet **Correction** et clique sur **Créer une session**.
-2. L'application affiche un **code de classe** (8 caractères, par exemple `6HQ9-CM5Z`) et le lien des élèves (`…?classe=6HQ9-CM5Z`). Le professeur projette le lien, ou écrit le code au tableau.
-3. Chaque binôme ouvre ce lien (ou tape le code dans « Envoyer au professeur »), complète son dossier, puis clique sur **Envoyer ma copie au professeur**.
+2. L'application affiche un **code de classe** (8 caractères, par exemple `6HQ9-CM5Z`), le **QR code** et le lien des élèves (`…?classe=6HQ9-CM5Z`). Le professeur projette le QR code (`QR en grand`) ou écrit le code au tableau.
+3. Chaque binôme scanne le QR code, ouvre le lien, ou tape le code dans « Envoyer au professeur », complète son dossier, puis clique sur **Envoyer ma copie au professeur**.
 4. La copie apparaît **toute seule** dans la liste du professeur, en quelques secondes. Il peut la réouvrir et la corriger même si le binôme renvoie une version mise à jour : les points déjà saisis sont conservés.
 5. Sous chaque question : le **barème**, la **case de points** et la **correction rédigée**. La carte mentale se clique pour s'ouvrir en grand.
 6. **Exporter les notes** produit un fichier CSV (classe, binôme, points par item, total) ouvrable dans un tableur.
@@ -117,6 +117,7 @@ correction.css  espace professeur : copies reçues, barème, saisie des points
 content.js      contenus historiques, questions, barème, corrections, glossaire, bibliographie
 app.js          logique du parcours, identité du binôme, sauvegarde, export, remise, correction
 sync.js         session de classe : envoi direct et réception en temps réel (Firebase)
+vendor/         qrcode-generator 1.4.4 (MIT, Kazuhiko Arase) pour le QR code de session
 map.js          canevas de carte mentale et rendu spatial imprimable
 storage.js      IndexedDB avec repli localStorage
 assets/images/  images d'ambiance fournies par l'enseignant
@@ -149,6 +150,7 @@ Les données restent sur l'appareil. Elles peuvent être perdues si le navigateu
 ## Droits
 
 - Le code de cette application est publié sous licence MIT (voir `LICENSE`).
+- `vendor/qrcode-generator-1.4.4.js` est le générateur de QR code de Kazuhiko Arase, sous licence MIT ; il est inclus tel quel, sans modification.
 - Les textes pédagogiques originaux (synthèses, questions, consignes) sont proposés sous licence CC BY-SA 4.0.
 - Les documents sources restent soumis aux conditions de leurs institutions respectives : EHNE (CC BY 4.0), Histoire par l'image (© RMN-Grand Palais et ayants droit), USHMM, GHDI. Les images ne sont pas reproduites dans l'application.
 

@@ -1431,6 +1431,31 @@ function studentLink(code) {
   return url.toString();
 }
 
+/** QR code généré localement (aucun appel réseau). */
+function qrSvgTag(text, cellSize = 4) {
+  if (typeof qrcode !== "function" || !text) return "";
+  try {
+    const qr = qrcode(0, "M");
+    qr.addData(text);
+    qr.make();
+    return qr.createSvgTag({ cellSize, margin: 2, scalable: true, alt: "QR code de la classe" });
+  } catch (_) {
+    return "";
+  }
+}
+
+function openQrDialog() {
+  if (!teacherSession) return;
+  const dialog = $("#qrDialog");
+  const mount = $("#qrLarge");
+  const label = $("#qrCodeText");
+  if (!dialog || !mount) return;
+  const link = studentLink(teacherSession);
+  mount.innerHTML = qrSvgTag(link, 10) || "<p>QR code indisponible sur ce navigateur.</p>";
+  if (label) label.textContent = `${teacherSession} · ${link}`;
+  dialog.showModal();
+}
+
 function formatPoints(value) {
   return Number(value).toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 }
@@ -2099,6 +2124,9 @@ function bindSessionPanel() {
     });
   }
 
+  const openQr = $("#openQrButton");
+  if (openQr) openQr.addEventListener("click", openQrDialog);
+
   const leave = $("#leaveSessionButton");
   if (leave) {
     leave.addEventListener("click", () => {
@@ -2146,6 +2174,10 @@ function renderSessionPanel() {
           <p class="kicker">Code de la classe</p>
           <p class="session-code">${esc(teacherSession)}</p>
         </div>
+        <div class="session-qr">
+          <div class="session-qr-code">${qrSvgTag(studentLink(teacherSession), 4)}</div>
+          <button type="button" class="button ghost small" id="openQrButton">QR en grand</button>
+        </div>
         <div class="session-live-info">
           <p class="session-status" id="sessionStatus" role="status" aria-live="polite">Connexion…</p>
           <div class="session-actions">
@@ -2154,7 +2186,7 @@ function renderSessionPanel() {
           </div>
         </div>
       </div>
-      <p class="hint">Les élèves ouvrent ce lien, ou tapent ce code dans « Envoyer au professeur ». Laisse cet onglet ouvert pendant la séance.</p>`;
+      <p class="hint">Les élèves scannent le QR code, ouvrent le lien, ou tapent ce code dans « Envoyer au professeur ». Laisse cet onglet ouvert pendant la séance.</p>`;
   }
   bindSessionPanel();
 }
