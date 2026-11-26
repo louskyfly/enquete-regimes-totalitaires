@@ -11,3 +11,7 @@ _control*
 _images*
 _print*
 _imgcheck*
+
+_*.mjs
+_*.png
+_*.cjs
