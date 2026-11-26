@@ -1413,8 +1413,109 @@ function base64UrlToBytes(value) {
   return bytes;
 }
 
+const QUESTION_IDS = DOSSIERS.flatMap((dossier) => dossier.questions.map((question) => question.id));
+const MECHANISM_IDS = MECHANISMS.map((mechanism) => mechanism.id);
+const SORT_IDS = SORT_ITEMS.map((item) => item.id);
+const MECHANISM_CODES = { urss: "u", allemagne: "a", both: "b" };
+const MECHANISM_FROM_CODE = { u: "urss", a: "allemagne", b: "both" };
+const COLUMN_CODES = { commun: "c", urss: "u", allemagne: "a", nuance: "n" };
+const COLUMN_FROM_CODE = { c: "commun", u: "urss", a: "allemagne", n: "nuance" };
+
+/** Forme compacte : réduit le lien de correction sans rien perdre du contenu. */
+function compactSubmission(submission) {
+  const answers = QUESTION_IDS.map((questionId) => {
+    const dossier = DOSSIERS.find((d) => d.questions.some((q) => q.id === questionId));
+    return String(submission.dossiers?.[dossier.id]?.answers?.[questionId] || "");
+  });
+  const mechanisms = MECHANISM_IDS.map((id) => MECHANISM_CODES[submission.mechanisms?.[id]?.choice] || "").join("");
+  const sort = SORT_IDS.map((id) => COLUMN_CODES[submission.sort?.[id]] || "").join("");
+  const nodes = (submission.map?.nodes || []).map((node) => [
+    node.id,
+    node.category,
+    Math.round(Number(node.x) || 0),
+    Math.round(Number(node.y) || 0),
+    Math.round(Number(node.w) || 0),
+    Math.round(Number(node.h) || 0),
+    node.shape || "rounded",
+    node.title || "",
+    node.note || "",
+    node.source || "",
+    node.sourceUrl || ""
+  ]);
+  const links = (submission.map?.links || []).map((link) => [link.from, link.to, link.label || ""]);
+  return {
+    v: 2,
+    id: submission.id,
+    at: submission.submittedAt,
+    g: [
+      submission.group?.className || "",
+      (submission.group?.members || []).map((member) => [member.firstName || "", member.lastName || ""])
+    ],
+    a: answers,
+    m: mechanisms,
+    s: sort,
+    n: nodes,
+    l: links,
+    c: submission.conclusion || ""
+  };
+}
+
+function expandSubmission(payload) {
+  if (payload && payload.version === 1) return payload;
+  if (!payload || payload.v !== 2) throw new Error("Format de copie inconnu");
+  const dossiers = {};
+  DOSSIERS.forEach((dossier) => {
+    const answers = {};
+    dossier.questions.forEach((question) => {
+      const index = QUESTION_IDS.indexOf(question.id);
+      answers[question.id] = payload.a?.[index] || "";
+    });
+    dossiers[dossier.id] = { answers };
+  });
+  const mechanisms = {};
+  MECHANISM_IDS.forEach((id, index) => {
+    const choice = MECHANISM_FROM_CODE[payload.m?.[index]] || "";
+    mechanisms[id] = { choice };
+  });
+  const sort = {};
+  SORT_IDS.forEach((id, index) => {
+    const column = COLUMN_FROM_CODE[payload.s?.[index]] || "";
+    if (column) sort[id] = column;
+  });
+  const nodes = (payload.n || []).map((row, index) => ({
+    id: row[0] || `n-${index}`,
+    category: row[1] || "commun",
+    x: Number(row[2]) || 0,
+    y: Number(row[3]) || 0,
+    w: Number(row[4]) || undefined,
+    h: Number(row[5]) || undefined,
+    shape: row[6] || "rounded",
+    title: row[7] || "Idée",
+    note: row[8] || "",
+    source: row[9] || "",
+    sourceUrl: row[10] || ""
+  }));
+  const links = (payload.l || [])
+    .filter((row) => row && row[0] && row[1])
+    .map((row, index) => ({ id: `l-${index}`, from: row[0], to: row[1], label: row[2] || "" }));
+  return {
+    version: 1,
+    id: payload.id,
+    submittedAt: payload.at,
+    group: {
+      className: payload.g?.[0] || "",
+      members: (payload.g?.[1] || []).map(([firstName, lastName]) => ({ firstName: firstName || "", lastName: lastName || "" }))
+    },
+    dossiers,
+    mechanisms,
+    sort,
+    map: { nodes, links },
+    conclusion: payload.c || ""
+  };
+}
+
 async function encodeCopy(submission) {
-  const json = JSON.stringify(submission);
+  const json = JSON.stringify(compactSubmission(submission));
   if (typeof CompressionStream !== "undefined") {
     try {
       const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("deflate-raw"));
@@ -1451,8 +1552,9 @@ async function decodeCopy(input) {
       json = new TextDecoder().decode(base64UrlToBytes(clean));
     }
   }
-  const submission = JSON.parse(json);
-  if (!submission || submission.version !== 1 || !submission.group || !submission.map) {
+  const parsed = JSON.parse(json);
+  const submission = expandSubmission(parsed);
+  if (!submission || !submission.group || !submission.map) {
     throw new Error("Format de copie invalide");
   }
   return submission;
@@ -1631,7 +1733,8 @@ function renderCorrectionView() {
 
     <section class="correction-block">
       <div class="correction-block-head"><h3>Carte mentale</h3><span class="bareme">Barème : ${formatPoints(EVALUATION.map.points)} pts</span></div>
-      <div class="correction-map">${mapSvg || '<p class="muted">Carte non fournie.</p>'}</div>
+      <div class="correction-map" role="button" tabindex="0" aria-label="Agrandir la carte mentale">${mapSvg || '<p class="muted">Carte non fournie.</p>'}</div>
+      <p class="hint">Clique sur la carte pour l'agrandir (Échap pour fermer).</p>
       <div class="correction-grade">${gradeInput("map", EVALUATION.map.points, grades.map)}</div>
       <div class="correction-key"><span>Correction</span><p>${esc(EVALUATION.map.correction)}</p></div>
     </section>
@@ -1671,6 +1774,16 @@ function renderCorrectionView() {
 function renderCorrectionPage() {
   renderCorrectionList();
   renderCorrectionView();
+}
+
+function openMapZoom(source) {
+  const dialog = $("#mapZoomDialog");
+  const body = $("#mapZoomBody");
+  if (!dialog || !body) return;
+  const svg = source.querySelector("svg");
+  body.innerHTML = svg ? svg.outerHTML : "";
+  if (!body.innerHTML) return;
+  dialog.showModal();
 }
 
 function ingestSubmission(submission) {
@@ -1713,8 +1826,8 @@ async function openCorrectionFromFile(file) {
   const message = $("#correctionMessage");
   try {
     const text = await file.text();
-    const submission = JSON.parse(text);
-    if (!submission || submission.version !== 1 || !submission.group || !submission.map) {
+    const submission = expandSubmission(JSON.parse(text));
+    if (!submission || !submission.group || !submission.map) {
       throw new Error("format");
     }
     ingestSubmission(submission);
@@ -1874,7 +1987,10 @@ function bindCorrection() {
     view.addEventListener("click", (event) => {
       if (event.target.closest("#saveCorrectionButton")) {
         toast("Correction enregistrée sur cet appareil.");
+        return;
       }
+      const map = event.target.closest(".correction-map");
+      if (map) openMapZoom(map);
     });
   }
 

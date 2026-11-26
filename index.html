@@ -404,14 +404,31 @@
       </label>
       <div class="modal-actions">
         <button type="button" class="button primary" id="copySendLink">Copier le lien</button>
-        <button type="button" class="button secondary" id="downloadCopy">Télécharger la copie</button>
+        <button type="button" class="button secondary" id="downloadCopy">Télécharger la copie (.json)</button>
       </div>
-      <p class="hint">Si le lien est trop long pour la messagerie, transmets aussi le code ci-dessous : le professeur peut le coller dans l'onglet Correction.</p>
-      <label class="field">
-        <span>Code de correction</span>
-        <textarea id="sendCode" rows="4" readonly></textarea>
-      </label>
-      <button type="button" class="button ghost small" id="copySendCode">Copier le code</button>
+      <p class="hint">Si la messagerie coupe le lien, envoie plutôt le fichier .json : le professeur l'ouvre dans l'onglet Correction avec « Ouvrir un fichier .json ».</p>
+      <details class="send-fallback">
+        <summary>Code de secours</summary>
+        <label class="field">
+          <span>Code de correction</span>
+          <textarea id="sendCode" rows="4" readonly></textarea>
+        </label>
+        <button type="button" class="button ghost small" id="copySendCode">Copier le code</button>
+      </details>
+    </div>
+  </dialog>
+
+  <!-- Carte agrandie pour la correction -->
+  <dialog id="mapZoomDialog" class="modal modal-wide map-zoom-modal" aria-labelledby="mapZoomTitle">
+    <div class="modal-inner">
+      <div class="modal-head">
+        <div>
+          <p class="kicker">Copie du binôme</p>
+          <h2 id="mapZoomTitle">Carte mentale</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog="mapZoomDialog" aria-label="Fermer la carte">×</button>
+      </div>
+      <div class="map-zoom-body" id="mapZoomBody"></div>
     </div>
   </dialog>
 

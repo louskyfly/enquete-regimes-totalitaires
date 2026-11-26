@@ -47,6 +47,26 @@
     cursor: pointer;
   }
 
+  .send-fallback {
+    margin-top: 12px;
+    border-top: 1px dashed #c9b18e;
+    padding-top: 10px;
+  }
+
+  .send-fallback > summary {
+    cursor: pointer;
+    font-family: "Courier New", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #7d2f2f;
+    margin-bottom: 8px;
+  }
+
+  .send-fallback .field {
+    margin-bottom: 8px;
+  }
+
   .correction-layout {
     display: grid;
     grid-template-columns: 300px minmax(0, 1fr);
@@ -342,8 +362,34 @@
     background: #fff;
     padding: 8px;
     overflow: auto;
-    max-height: 440px;
     margin-bottom: 8px;
+    cursor: zoom-in;
+    position: relative;
+  }
+
+  .correction-map:focus-visible {
+    outline: 3px solid #7d2f2f;
+    outline-offset: 2px;
+  }
+
+  .map-zoom-modal .modal-inner {
+    width: min(1400px, calc(100vw - 28px));
+    background: #fbf4e4;
+  }
+
+  .map-zoom-body {
+    background: #fff;
+    border: 1px solid #c9b18e;
+    border-radius: 3px;
+    padding: 10px;
+    overflow: auto;
+    max-height: 74vh;
+  }
+
+  .map-zoom-body svg {
+    width: 100%;
+    height: auto;
+    display: block;
   }
 
   .correction-map svg {
