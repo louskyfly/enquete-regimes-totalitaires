@@ -45,7 +45,7 @@ export const CATEGORIES = {
     border: "#8a6a2f"
   },
   nuance: {
-    label: "À vérifier / à nuancer",
+    label: "À vérifier / à nuancer (propagande)",
     short: "À nuancer",
     icon: "?",
     color: "#6b5b7a",
@@ -509,7 +509,7 @@ export function startLink() {
   linkFrom = selectedNodeId;
   renderNodes();
   renderInspector();
-  setStatus("Choisis maintenant le nœud d'arrivée. Échap pour annuler.");
+  setStatus("Choisis maintenant le nœud d'arrivée.");
 }
 
 function finishLink(toId) {
@@ -585,7 +585,7 @@ function renderInspector() {
         <button type="button" class="button secondary" data-action="start-link">Relier ce nœud</button>
         <button type="button" class="button danger" data-action="delete-node">Supprimer</button>
       </div>
-      <p class="hint">Astuce : les flèches du clavier déplacent le nœud sélectionné. <kbd>L</kbd> pour créer un lien.</p>
+      <p class="hint">Glisse un nœud pour le déplacer. Utilise « Relier ce nœud » pour créer un lien.</p>
     `;
     return;
   }
@@ -625,7 +625,7 @@ function renderInspector() {
       <button type="button" class="button secondary" data-action="add-node">Ajouter un nœud</button>
       <button type="button" class="button ghost" data-action="fit">Ajuster la vue</button>
     </div>
-    <p class="hint">Le canevas se déplace en glissant le fond. La molette zoome. <kbd>Ctrl</kbd> + <kbd>Z</kbd> annule.</p>
+    <p class="hint">Glisse le fond pour déplacer. Pince avec deux doigts ou utilise + / − pour zoomer.</p>
   `;
 }
 
@@ -1024,8 +1024,8 @@ export function applyTemplate(name) {
 
 export function buildFromSort(placements, items) {
   const placed = items.filter((item) => placements[item.id]);
-  if (!placed.length) {
-    setStatus("Aucun élément du tri n'est placé. Termine l'étape Comparer d'abord.");
+  if (placed.length < items.length) {
+    setStatus(`Termine le tri : ${placed.length}/${items.length} éléments placés.`);
     return;
   }
   if (state.nodes.length && !window.confirm("Remplacer la carte actuelle par une carte construite à partir de ton tri ?")) return;
@@ -1044,10 +1044,10 @@ export function buildFromSort(placements, items) {
     sourceUrl: ""
   };
   const branches = [
-    { column: "commun", title: "Points communs", category: "commun", x: 3300, y: 2450 },
-    { column: "urss", title: "URSS de Staline", category: "urss", x: 3300, y: 3400 },
-    { column: "allemagne", title: "Allemagne nazie", category: "allemagne", x: 4400, y: 2450 },
-    { column: "nuance", title: "À vérifier / à nuancer", category: "nuance", x: 4400, y: 3400 }
+    { column: "commun", title: "Points communs", category: "commun", x: 3450, y: 2600 },
+    { column: "urss", title: "URSS de Staline", category: "urss", x: 3450, y: 3200 },
+    { column: "allemagne", title: "Allemagne nazie", category: "allemagne", x: 4300, y: 2600 },
+    { column: "nuance", title: "À vérifier / à nuancer", category: "nuance", x: 4300, y: 3200 }
   ].map((b) => ({
     ...b,
     id: uid("n"),
@@ -1062,17 +1062,15 @@ export function buildFromSort(placements, items) {
   const links = branches.map((b) => ({ id: uid("l"), from: central.id, to: b.id, label: "" }));
   branches.forEach((branch) => {
     const leaves = placed.filter((item) => placements[item.id] === branch.column);
+    const leftSide = branch.column === "commun" || branch.column === "urss";
     leaves.forEach((item, index) => {
-      const leftSide = branch.column === "commun" || branch.column === "urss";
-      const x = leftSide ? 3050 : 4650;
-      const y = 2350 + index * 112;
       const leaf = {
         id: uid("n"),
         title: item.nodeTitle || item.text,
         category: branch.column,
         shape: "rounded",
-        x,
-        y: branch.column === "urss" || branch.column === "nuance" ? y + 1400 : y,
+        x: leftSide ? (index % 2 === 0 ? 3200 : 3450) : index % 2 === 0 ? 4300 : 4550,
+        y: branch.y + 140 + Math.floor(index / 2) * 105,
         w: 214,
         h: 98,
         note: item.text,
@@ -1089,9 +1087,9 @@ export function buildFromSort(placements, items) {
   selectedLinkId = null;
   linkFrom = null;
   render();
-  requestAnimationFrame(() => fitView());
+  requestAnimationFrame(() => centerOnCentral(0.75));
   notify();
-  setStatus("Carte construite à partir de ton tri. Zoome pour lire les nœuds, puis réorganise-la librement.");
+  setStatus("Carte construite à partir de ton tri. Déplace-toi pour voir les branches, ou touche Ajuster pour tout afficher.");
 }
 
 function wrapText(text, maxChars) {
@@ -1154,12 +1152,14 @@ export function toSVG() {
   for (const node of state.nodes) {
     const cat = CATEGORIES[node.category] || CATEGORIES.commun;
     const isCentral = node.category === "central";
-    const titleSize = isCentral ? 19 : 14;
+    const titleSize = isCentral ? 20 : 15.5;
     const maxChars = isCentral ? 26 : 23;
-    const lines = wrapText(node.title, maxChars);
-    const lineHeight = isCentral ? 23 : 17;
+    const wrapped = wrapText(node.title, maxChars);
+    const lines = wrapped.slice(0, 3);
+    if (wrapped.length > 3) lines[2] = lines[2].replace(/\s+\S*$/, "") + "…";
+    const lineHeight = isCentral ? 23 : 18;
     const badgeY = isCentral ? 27 : 20;
-    const titleStart = isCentral ? 56 : 43;
+    const titleStart = isCentral ? 56 : 44;
     const fill = isCentral ? cat.fill : cat.fill;
     const textFill = isCentral ? cat.text : cat.text;
     const stroke = cat.border;

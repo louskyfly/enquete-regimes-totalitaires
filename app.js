@@ -7,10 +7,9 @@ import {
   SORT_ITEMS,
   GLOSSARY,
   BIBLIOGRAPHY,
-  CONTROL_MODE,
-  IMAGES
+  CONTROL_MODE
 } from "./content.js";
-import { CATEGORIES, initMap, setMapData, getMapData, applyTemplate, buildFromSort, toPrintSVG, undo, redo, zoomIn, zoomOut, fitView, addNode, startLink } from "./map.js";
+import { CATEGORIES, initMap, setMapData, buildFromSort, toSVG, undo, redo, zoomIn, zoomOut, fitView, addNode, startLink } from "./map.js";
 import { saveState, loadState, clearState } from "./storage.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -50,12 +49,20 @@ function slugify(value) {
     .toLowerCase() || "eleve";
 }
 
+function emptyMember() {
+  return { firstName: "", lastName: "" };
+}
+
 function defaultState() {
   return {
     version: 1,
     createdAt: new Date().toISOString(),
     updatedAt: null,
     studentName: "",
+    group: {
+      className: "",
+      members: [emptyMember(), emptyMember(), emptyMember()]
+    },
     step: 0,
     dossiers: {},
     mechanisms: {},
@@ -76,6 +83,27 @@ function normalizeState(raw) {
   merged.step = clamp(Number(merged.step) || 0, 0, 5);
   merged.studentName = String(merged.studentName || "");
   merged.conclusion = String(merged.conclusion || "");
+  if (raw.group && Array.isArray(raw.group.members)) {
+    const members = raw.group.members
+      .slice(0, 6)
+      .map((member) => ({
+        firstName: String(member.firstName || ""),
+        lastName: String(member.lastName || "")
+      }));
+    while (members.length < 3) members.push(emptyMember());
+    merged.group = { className: String(raw.group.className || ""), members };
+  } else {
+    const legacy = String(raw.studentName || "").trim();
+    const parts = legacy.split(/\s+/).filter(Boolean);
+    const members = [emptyMember(), emptyMember(), emptyMember()];
+    if (legacy) {
+      members[0] = {
+        firstName: parts[0] || "",
+        lastName: parts.slice(1).join(" ")
+      };
+    }
+    merged.group = { className: "", members };
+  }
   merged.dossiers = { ...(raw.dossiers || {}) };
   merged.mechanisms = { ...(raw.mechanisms || {}) };
   merged.sort = { ...(raw.sort || {}) };
@@ -93,9 +121,117 @@ function hasActivity(raw) {
   return Boolean(
     raw.updatedAt ||
       raw.studentName ||
+      (raw.group && (raw.group.className || (raw.group.members || []).some((m) => m.firstName || m.lastName))) ||
       raw.conclusion ||
       (raw.map && Array.isArray(raw.map.nodes) && raw.map.nodes.length)
   );
+}
+
+function memberFullName(member) {
+  return `${String(member.firstName || "").trim()} ${String(member.lastName || "").trim()}`.trim();
+}
+
+function identityComplete() {
+  const group = state.group || { className: "", members: [] };
+  const members = group.members || [];
+  return (
+    String(group.className || "").trim().length > 0 &&
+    members.length >= 3 &&
+    members.length <= 6 &&
+    members.every((member) => member.firstName.trim() && member.lastName.trim())
+  );
+}
+
+function groupNames() {
+  return (state.group?.members || [])
+    .map(memberFullName)
+    .filter(Boolean)
+    .join(", ");
+}
+
+function groupSummary() {
+  const group = state.group || { className: "", members: [] };
+  const count = (group.members || []).length;
+  const className = String(group.className || "").trim();
+  if (!className && !groupNames()) return "Identité à compléter";
+  return `${className || "Classe ?"} · ${count} élève${count > 1 ? "s" : ""}`;
+}
+
+function answeredQuestionCount() {
+  let total = 0;
+  let answered = 0;
+  for (const dossier of DOSSIERS) {
+    const answers = state.dossiers[dossier.id]?.answers || {};
+    for (const question of dossier.questions) {
+      total += 1;
+      if (String(answers[question.id] || "").trim()) answered += 1;
+    }
+  }
+  return { total, answered };
+}
+
+function allDossierQuestionsAnswered() {
+  const { total, answered } = answeredQuestionCount();
+  return total > 0 && answered === total;
+}
+
+function allMechanismsChosen() {
+  return MECHANISMS.every((m) => Boolean(state.mechanisms[m.id]?.choice));
+}
+
+function allSortPlaced() {
+  return SORT_ITEMS.every((item) => Boolean(state.sort[item.id]));
+}
+
+function mapCreated() {
+  const nodes = state.map?.nodes || [];
+  const links = state.map?.links || [];
+  return nodes.some((n) => n.category === "central") && nodes.length >= 5 && links.length >= 4;
+}
+
+function conclusionComplete() {
+  return countSentences(state.conclusion) >= 3 && String(state.conclusion || "").trim().length >= 120;
+}
+
+function exportStatus() {
+  const identity = identityComplete();
+  const questions = allDossierQuestionsAnswered();
+  const mechanisms = allMechanismsChosen();
+  const sort = allSortPlaced();
+  const map = mapCreated();
+  const conclusion = conclusionComplete();
+  const { total, answered } = answeredQuestionCount();
+  const nodes = state.map?.nodes || [];
+  const count = (cat) => nodes.filter((n) => n.category === cat).length;
+  const sources = nodes.filter((n) => String(n.source || "").trim()).length;
+
+  const missing = [];
+  if (!identity) missing.push("Renseigne la classe et les prénoms/noms des 3 à 6 élèves.");
+  if (!questions) missing.push(`Réponds aux questions des dossiers (${answered}/${total}).`);
+  if (!mechanisms) missing.push("Classe les 9 mécanismes dans la boîte à outils.");
+  if (!sort) missing.push("Place les 16 éléments du tri.");
+  if (!map) missing.push("Crée la carte mentale à partir de ton tri.");
+  if (!conclusion) missing.push("Rédige une conclusion de 3 phrases minimum.");
+
+  const warnings = [];
+  if (map) {
+    if (count("commun") < 3) warnings.push("Ajoute au moins 3 points communs.");
+    if (count("urss") < 3) warnings.push("Ajoute au moins 3 éléments propres à l'URSS.");
+    if (count("allemagne") < 3) warnings.push("Ajoute au moins 3 éléments propres à l'Allemagne nazie.");
+    if (sources < 5) warnings.push("Indique une source sur au moins 5 nœuds.");
+  }
+
+  return {
+    identity,
+    questions,
+    mechanisms,
+    sort,
+    map,
+    conclusion,
+    blocking: identity && questions && mechanisms && sort && map && conclusion,
+    missing,
+    warnings
+  };
 }
 
 function isTyping() {
@@ -145,9 +281,112 @@ function scheduleSave() {
 
 function renderBriefing() {
   $("#briefingMission").textContent = BRIEFING.mission;
+  $("#briefingIntro").innerHTML = BRIEFING.intro.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("");
+  $("#briefingSteps").innerHTML = BRIEFING.steps.map((step) => `<li>${esc(step)}</li>`).join("");
+  $("#briefingRules").textContent = BRIEFING.rules;
   $("#briefingWarning").textContent = BRIEFING.warning;
   $("#briefingMethod").textContent = BRIEFING.method;
   $("#objectivesList").innerHTML = BRIEFING.objectives.map((o) => `<li>${esc(o)}</li>`).join("");
+}
+
+function renderMemberList() {
+  const list = $("#memberList");
+  if (!list) return;
+  const members = state.group.members;
+  list.innerHTML = members
+    .map(
+      (member, index) => `<div class="member-row">
+        <span class="member-number" aria-hidden="true">${index + 1}</span>
+        <label class="member-field">
+          <span class="sr-only">Prénom de l'élève ${index + 1}</span>
+          <input type="text" data-member-index="${index}" data-member-field="firstName" value="${esc(member.firstName)}" maxlength="30" placeholder="Prénom" autocomplete="off" />
+        </label>
+        <label class="member-field">
+          <span class="sr-only">Nom de l'élève ${index + 1}</span>
+          <input type="text" data-member-index="${index}" data-member-field="lastName" value="${esc(member.lastName)}" maxlength="30" placeholder="Nom" autocomplete="off" />
+        </label>
+        ${
+          members.length > 3
+            ? `<button type="button" class="member-remove" data-remove-member="${index}" aria-label="Retirer l'élève ${index + 1}">×</button>`
+            : ""
+        }
+      </div>`
+    )
+    .join("");
+}
+
+function renderIdentitySummary() {
+  const summary = $("#identitySummary");
+  const warning = $("#identityWarning");
+  const hint = $("#memberHint");
+  const add = $("#addMember");
+  const panel = $("#identityPanel");
+  const complete = identityComplete();
+  if (summary) summary.textContent = groupSummary();
+  if (warning) warning.hidden = complete;
+  if (hint) hint.textContent = `3 à 6 élèves · ${state.group.members.length}`;
+  if (add) add.disabled = state.group.members.length >= 6;
+  if (panel) panel.classList.toggle("is-incomplete", !complete);
+  const classInput = $("#className");
+  if (classInput && document.activeElement !== classInput) classInput.value = state.group.className || "";
+}
+
+function renderIdentity() {
+  renderMemberList();
+  renderIdentitySummary();
+}
+
+function bindIdentity() {
+  const classInput = $("#className");
+  if (classInput) {
+    classInput.addEventListener("input", () => {
+      state.group.className = classInput.value;
+      renderIdentitySummary();
+      updateChecklist();
+      renderExportGate();
+      scheduleSave();
+    });
+  }
+
+  const list = $("#memberList");
+  if (list) {
+    list.addEventListener("input", (event) => {
+      const index = Number(event.target.dataset.memberIndex);
+      const field = event.target.dataset.memberField;
+      if (!Number.isInteger(index) || !field || !state.group.members[index]) return;
+      state.group.members[index][field] = event.target.value;
+      renderIdentitySummary();
+      updateChecklist();
+      renderExportGate();
+      scheduleSave();
+    });
+    list.addEventListener("click", (event) => {
+      const remove = event.target.closest("[data-remove-member]");
+      if (!remove) return;
+      const index = Number(remove.dataset.removeMember);
+      if (state.group.members.length <= 3) return;
+      state.group.members.splice(index, 1);
+      renderIdentity();
+      updateChecklist();
+      renderExportGate();
+      scheduleSave();
+    });
+  }
+
+  const add = $("#addMember");
+  if (add) {
+    add.addEventListener("click", () => {
+      if (state.group.members.length >= 6) return;
+      state.group.members.push(emptyMember());
+      renderIdentity();
+      const last = $("#memberList").lastElementChild;
+      const firstInput = last ? last.querySelector("input") : null;
+      if (firstInput) firstInput.focus();
+      updateChecklist();
+      renderExportGate();
+      scheduleSave();
+    });
+  }
 }
 
 function renderDossiers() {
@@ -158,43 +397,28 @@ function renderDossiers() {
     const answers = progress.answers || {};
     const answered = Object.values(answers).filter((v) => String(v || "").trim().length > 0).length;
     const done = Boolean(progress.done);
-    return `<article class="dossier-card regime-${esc(d.regimeClass)}">
-      <div class="dossier-top">
-        <span class="badge">Dossier ${d.number}</span>
-        <span class="regime-tag">${esc(d.regime)}</span>
+    return `<article class="dossier-card dossier-pocket regime-${esc(d.regimeClass)}">
+      <span class="paperclip" aria-hidden="true"></span>
+      <span class="dossier-stamp" aria-hidden="true">TOP SECRET</span>
+      <span class="dossier-tab">Dossier ${String(d.number).padStart(2, "0")}</span>
+      <span class="dossier-sticker">${esc(d.regime)}</span>
+      <div class="dossier-label">
+        <p class="dossier-hand">Pièce n° ${String(d.number).padStart(2, "0")} — à examiner</p>
+        <h3>${esc(d.title)}</h3>
+        <p class="dossier-type">${esc(d.type)}</p>
+        <p class="dossier-date">${esc(d.date)}</p>
       </div>
-      <h3>${esc(d.title)}</h3>
-      <p class="dossier-type">${esc(d.type)}</p>
-      <p class="dossier-date">${esc(d.date)}</p>
-      <p class="dossier-source">Source : ${esc(d.source)}</p>
-      <div class="dossier-progress">
-        <span>${d.texts.length} extraits</span>
-        <span>${answered}/${d.questions.length} réponses</span>
-        <span class="${done ? "is-done" : ""}">${done ? "Terminé" : "À ouvrir"}</span>
+      <div class="dossier-foot">
+        <span class="dossier-count">${d.texts.length} extraits</span>
+        <span class="dossier-count">${answered}/${d.questions.length} réponses</span>
+        <span class="dossier-count ${done ? "is-done" : ""}">${done ? "Terminé" : "À ouvrir"}</span>
       </div>
-      <button type="button" class="button secondary" data-dossier="${esc(d.id)}">${done ? "Rouvrir le dossier" : "Ouvrir le dossier"}</button>
+      <button type="button" class="dossier-open" data-dossier="${esc(d.id)}" aria-label="Ouvrir la pochette ${esc(d.title)}">${done ? "Rouvrir la pochette" : "Ouvrir la pochette"}</button>
     </article>`;
   }).join("");
   $$("[data-dossier]", grid).forEach((button) => {
     button.addEventListener("click", () => openDossier(button.dataset.dossier));
   });
-}
-
-function renderImages() {
-  const gallery = $("#imageGallery");
-  if (!gallery) return;
-  gallery.innerHTML = IMAGES.map(
-    (img) => `<figure class="image-card">
-      <img src="${esc(img.src)}" alt="${esc(img.alt)}" loading="lazy" decoding="async" />
-      <figcaption>
-        <span class="image-nature">${esc(img.nature)}</span>
-        <strong>${esc(img.title)}</strong>
-        <p>${esc(img.caption)}</p>
-        <p class="image-credit">${esc(img.credit)}</p>
-        <p class="image-caution">${esc(img.caution)}</p>
-      </figcaption>
-    </figure>`
-  ).join("");
 }
 
 function openDossier(id) {
@@ -289,6 +513,7 @@ function bindDossierDialog() {
     const answers = { ...(prev.answers || {}), [qid]: event.target.value };
     state.dossiers[currentDossierId] = { ...prev, answers };
     scheduleSave();
+    updateChecklist();
   });
 
   content.addEventListener("change", (event) => {
@@ -338,36 +563,56 @@ function renderMechanisms() {
     { id: "allemagne", label: "Allemagne nazie" },
     { id: "both", label: "Les deux" }
   ];
-  list.innerHTML = MECHANISMS.map((m) => {
-    const saved = state.mechanisms[m.id] || {};
-    const choice = saved.choice || "";
-    const checked = Boolean(saved.checked && choice);
-    const correct = checked && choice === m.answer;
-    return `<article class="mechanism" data-mechanism="${esc(m.id)}">
-      <p class="mechanism-label">${esc(m.label)}</p>
-      <div class="segmented" role="radiogroup" aria-label="${esc(m.label)}">
-        ${choices
-          .map(
-            (c) =>
-              `<button type="button" role="radio" aria-checked="${choice === c.id}" class="${choice === c.id ? "is-chosen" : ""}" data-choice="${c.id}">${esc(c.label)}</button>`
-          )
-          .join("")}
+  const icons = ["◉", "⚑", "⌘", "▣", "✉", "⚒", "☍", "◈", "✶"];
+  const chosenCount = MECHANISMS.filter((m) => Boolean(state.mechanisms[m.id]?.choice)).length;
+  list.innerHTML = `
+    <div class="toolbox-head">
+      <div>
+        <p class="kicker">Boîte à outils</p>
+        <h3>Les mécanismes du pouvoir</h3>
+        <p>Classe chaque outil dans le ou les régimes concernés. Tu peux revenir sur tes choix.</p>
       </div>
-      ${
-        CONTROL_MODE
-          ? ""
-          : `<div class="mechanism-footer">
-              <button type="button" class="button secondary small" data-check="${esc(m.id)}">Vérifier</button>
-              <div class="feedback ${checked ? (correct ? "is-correct" : "is-wrong") : ""}" ${checked ? "" : "hidden"}>
-                <p><strong>${correct ? "Cela correspond." : "À revoir."}</strong> ${esc(m.feedback)}</p>
-                <p class="muted">Réponse attendue : ${esc(
-                  m.answer === "both" ? "les deux régimes" : m.answer === "urss" ? "l'URSS de Staline" : "l'Allemagne nazie"
-                )}</p>
-              </div>
-            </div>`
-      }
-    </article>`;
-  }).join("");
+      <div class="toolbox-progress">
+        <strong id="toolboxProgress">${chosenCount}/${MECHANISMS.length}</strong>
+        <span>outils classés</span>
+      </div>
+    </div>
+    <div class="toolbox-grid">
+      ${MECHANISMS.map((m, index) => {
+        const saved = state.mechanisms[m.id] || {};
+        const choice = saved.choice || "";
+        const checked = Boolean(saved.checked && choice);
+        const correct = checked && choice === m.answer;
+        return `<article class="mechanism tool-card" data-mechanism="${esc(m.id)}">
+          <div class="tool-card-top">
+            <span class="tool-number">Outil ${String(index + 1).padStart(2, "0")}</span>
+            <span class="tool-icon" aria-hidden="true">${icons[index] || "◆"}</span>
+          </div>
+          <p class="mechanism-label">${esc(m.label)}</p>
+          <div class="segmented stamp-choices" role="radiogroup" aria-label="${esc(m.label)}">
+            ${choices
+              .map(
+                (c) =>
+                  `<button type="button" role="radio" aria-checked="${choice === c.id}" class="${choice === c.id ? "is-chosen" : ""}" data-choice="${c.id}">${esc(c.label)}</button>`
+              )
+              .join("")}
+          </div>
+          ${
+            CONTROL_MODE
+              ? ""
+              : `<div class="mechanism-footer">
+                  <button type="button" class="button secondary small" data-check="${esc(m.id)}">Vérifier</button>
+                  <div class="feedback ${checked ? (correct ? "is-correct" : "is-wrong") : ""}" ${checked ? "" : "hidden"}>
+                    <p><strong>${correct ? "Cela correspond." : "À revoir."}</strong> ${esc(m.feedback)}</p>
+                    <p class="muted">Réponse attendue : ${esc(
+                      m.answer === "both" ? "les deux régimes" : m.answer === "urss" ? "l'URSS de Staline" : "l'Allemagne nazie"
+                    )}</p>
+                  </div>
+                </div>`
+          }
+        </article>`;
+      }).join("")}
+    </div>`;
 }
 
 function bindMechanisms() {
@@ -391,7 +636,11 @@ function bindMechanisms() {
         feedback.hidden = true;
         feedback.classList.remove("is-correct", "is-wrong");
       }
+      const chosen = MECHANISMS.filter((m) => Boolean(state.mechanisms[m.id]?.choice)).length;
+      const progress = $("#toolboxProgress");
+      if (progress) progress.textContent = `${chosen}/${MECHANISMS.length}`;
       scheduleSave();
+      updateChecklist();
       return;
     }
     const checkButton = event.target.closest("[data-check]");
@@ -440,6 +689,7 @@ function renderSort() {
     return `<section class="sort-column column-${esc(col.id)}" data-column="${esc(col.id)}" aria-labelledby="col-${esc(col.id)}">
       <div class="sort-column-head">
         <h3 id="col-${esc(col.id)}"><span class="col-icon" aria-hidden="true">${esc(CATEGORIES[col.id] ? CATEGORIES[col.id].icon : "•")}</span> ${esc(col.label)} <span class="col-count">${items.length}</span></h3>
+        ${col.stamp ? `<span class="column-stamp" aria-hidden="true">${esc(col.stamp)}</span>` : ""}
         <p>${esc(col.hint)}</p>
       </div>
       <div class="sort-items">
@@ -467,11 +717,12 @@ function renderSort() {
   if (instruction) {
     if (selectedSortItem) {
       const item = SORT_ITEMS.find((i) => i.id === selectedSortItem);
-      instruction.textContent = `Élément sélectionné : « ${item ? item.text : ""} ». Choisis une colonne (ou touche 1 à 4).`;
+      instruction.textContent = `Élément sélectionné : « ${item ? item.text : ""} ». Choisis une colonne.`;
     } else {
-      instruction.textContent = "Aucun élément sélectionné. Clique sur un élément, puis sur une colonne.";
+      instruction.textContent = "Aucun élément sélectionné. Touche un élément, puis une colonne.";
     }
   }
+  updateMapEmpty();
   renderSortFeedback();
 }
 
@@ -514,6 +765,7 @@ function placeSortItem(id, column) {
   selectedSortItem = null;
   scheduleSave();
   renderSort();
+  updateChecklist();
   requestAnimationFrame(() => {
     const el = document.querySelector(`.sort-item[data-sort-id="${id}"] .sort-item-main`);
     if (el) el.focus();
@@ -543,6 +795,7 @@ function bindSort() {
       state.sortChecked = false;
       scheduleSave();
       renderSort();
+      updateChecklist();
       return;
     }
     const item = event.target.closest("[data-sort-id]");
@@ -629,6 +882,7 @@ function bindSort() {
     selectedSortItem = null;
     scheduleSave();
     renderSort();
+    updateChecklist();
   });
 }
 
@@ -646,15 +900,51 @@ function checklistItems() {
   const sources = nodes.filter((n) => String(n.source || "").trim().length > 0).length;
   const sentences = countSentences(state.conclusion);
   const conclusionOk = sentences >= 3 && state.conclusion.trim().length >= 120;
+  const { total, answered } = answeredQuestionCount();
   return [
-    { id: "central", ok: nodes.some((n) => n.category === "central"), label: "Un sujet central est présent.", tip: "Ajoute un nœud central ou choisis le modèle comparaison." },
+    {
+      id: "identity",
+      ok: identityComplete(),
+      label: "L'identité du groupe est complète (classe + 3 à 6 noms).",
+      tip: "Ouvre « Identité du groupe » en haut à droite."
+    },
+    {
+      id: "questions",
+      ok: allDossierQuestionsAnswered(),
+      label: `Toutes les questions sont répondues (${answered}/${total}).`,
+      tip: "Ouvre chaque dossier et complète les réponses."
+    },
+    {
+      id: "mechanisms",
+      ok: allMechanismsChosen(),
+      label: "Les 9 mécanismes sont classés.",
+      tip: "Utilise la boîte à outils de l'étape 3."
+    },
+    {
+      id: "sort",
+      ok: allSortPlaced(),
+      label: "Les 16 éléments du tri sont placés.",
+      tip: "Termine le tri de l'étape 4."
+    },
+    {
+      id: "map",
+      ok: mapCreated(),
+      label: "La carte a été créée à partir du tri.",
+      tip: "Utilise le bouton « Créer la carte à partir de mon tri »."
+    },
+    { id: "central", ok: nodes.some((n) => n.category === "central"), label: "Un sujet central est présent.", tip: "La carte doit partir du sujet central." },
     { id: "commun", ok: count("commun") >= 3, label: "Au moins 3 points communs.", tip: "Pense au parti unique, à la propagande, à la police politique." },
     { id: "urss", ok: count("urss") >= 3, label: "Au moins 3 éléments propres à l'URSS.", tip: "Collectivisation, plans, Goulag, Grande Terreur..." },
     { id: "allemagne", ok: count("allemagne") >= 3, label: "Au moins 3 éléments propres à l'Allemagne nazie.", tip: "Lois de Nuremberg, autarcie, réarmement, Führer..." },
     { id: "sources", ok: sources >= 5, label: "Au moins 5 nœuds ont une source.", tip: "Indique le dossier ou le document dans le champ « Source »." },
     { id: "links", ok: links.length >= 4, label: "Au moins 4 liens relient les idées.", tip: "Relie les branches au sujet central, puis les exemples aux branches." },
     { id: "conclusion", ok: conclusionOk, label: "La conclusion fait au moins 3 phrases.", tip: "Rédige 3 à 5 phrases dans l'étape Vérifier." },
-    { id: "nuance", ok: Boolean(state.checklistManual.nuance), label: "J'ai relu les éléments « à vérifier / à nuancer ».", tip: "Vérifie que tu peux expliquer pourquoi une affirmation est fausse ou imprécise." }
+    {
+      id: "nuance",
+      ok: Boolean(state.checklistManual.nuance),
+      label: "J'ai relu les éléments « à vérifier / à nuancer ».",
+      tip: "Vérifie que tu peux expliquer pourquoi une affirmation est fausse, imprécise ou de la propagande."
+    }
   ];
 }
 
@@ -690,6 +980,32 @@ function updateChecklist() {
   const list = $("#checklist");
   if (!list) return;
   renderChecklist();
+  renderExportGate();
+}
+
+function renderExportGate() {
+  const status = exportStatus();
+  const button = $("#previewButton");
+  if (button) {
+    button.disabled = !status.blocking;
+    button.setAttribute("aria-disabled", String(!status.blocking));
+    button.title = status.blocking
+      ? "Exporter le dossier en PDF"
+      : "Complète les éléments manquants avant d'exporter.";
+  }
+  const gate = $("#exportGate");
+  if (!gate) return;
+  const missing = status.missing.length
+    ? `<div class="gate-block"><p class="gate-title">Pour débloquer l'export</p><ul>${status.missing
+        .map((item) => `<li>${esc(item)}</li>`)
+        .join("")}</ul></div>`
+    : `<p class="gate-ok">Le dossier est complet : tu peux exporter.</p>`;
+  const warnings = status.warnings.length
+    ? `<div class="gate-block gate-warn"><p class="gate-title">Pour améliorer la carte</p><ul>${status.warnings
+        .map((item) => `<li>${esc(item)}</li>`)
+        .join("")}</ul></div>`
+    : "";
+  gate.innerHTML = missing + warnings;
 }
 
 function bindChecklist() {
@@ -778,6 +1094,12 @@ function updateMapEmpty() {
   const empty = $("#mapEmpty");
   if (!empty) return;
   const nodes = (state.map && state.map.nodes) || [];
+  const total = SORT_ITEMS.length;
+  const placed = SORT_ITEMS.filter((item) => Boolean(state.sort[item.id])).length;
+  const button = $("#mapFromSort");
+  const progress = $("#mapSortProgress");
+  if (button) button.disabled = placed < total;
+  if (progress) progress.textContent = `${placed} / ${total} éléments triés`;
   empty.hidden = nodes.length > 0;
 }
 
@@ -819,12 +1141,6 @@ function bindMapToolbar() {
   $("#mapZoomOut").addEventListener("click", () => zoomOut());
   $("#mapFit").addEventListener("click", () => fitView());
 
-  $("#mapTemplate").addEventListener("change", (event) => {
-    const value = event.target.value;
-    event.target.value = "";
-    if (value) applyTemplate(value);
-  });
-
   $("#mapFromSort").addEventListener("click", () => buildFromSort(state.sort, SORT_ITEMS));
 
   const outlinePanel = $("#mapOutlinePanel");
@@ -833,10 +1149,6 @@ function bindMapToolbar() {
     outlinePanel.open = !outlinePanel.open;
     outlineButton.setAttribute("aria-pressed", String(outlinePanel.open));
     if (outlinePanel.open) outlinePanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  });
-
-  $$("[data-template]").forEach((button) => {
-    button.addEventListener("click", () => applyTemplate(button.dataset.template));
   });
 }
 
@@ -904,9 +1216,10 @@ function buildSortHTML() {
 
 function buildPrintDoc() {
   const nodes = (state.map && state.map.nodes) || [];
-  const name = state.studentName.trim() || "Élève";
+  const names = groupNames() || "Groupe";
+  const className = String(state.group.className || "").trim() || "Classe non renseignée";
   const date = new Date().toLocaleDateString("fr-FR");
-  const svg = nodes.length ? toPrintSVG() : "";
+  const svg = nodes.length ? toSVG() : "";
   const answersHtml = buildAnswersHTML();
   const mechanismsHtml = buildMechanismsHTML();
   const sortHtml = buildSortHTML();
@@ -954,7 +1267,8 @@ function buildPrintDoc() {
     <header class="print-head">
       <p class="print-kicker">Contrôle d'histoire · ${esc(META.level)}</p>
       <h1>Dossier de contrôle : l'URSS de Staline et l'Allemagne nazie</h1>
-      <p class="print-meta">Élève : <strong>${esc(name)}</strong> · Date : ${esc(date)}</p>
+      <p class="print-meta">Groupe : <strong>${esc(names)}</strong></p>
+      <p class="print-meta">Classe : <strong>${esc(className)}</strong> · Date : ${esc(date)}</p>
     </header>
 
     <section class="print-section print-answers-section">
@@ -968,13 +1282,15 @@ function buildPrintDoc() {
       ${sortHtml}
     </section>
 
-    <section class="print-section print-map-section">
-      <div class="print-section-head">
-        <h2>La carte</h2>
+    <section class="print-map-page">
+      <header class="print-map-head">
+        <p class="print-kicker">Carte mentale du groupe</p>
+        <h1>URSS de Staline / Allemagne nazie</h1>
+        <p class="print-meta">Groupe : <strong>${esc(names)}</strong> · Classe : <strong>${esc(className)}</strong></p>
         <div class="print-legend">${legend}</div>
-      </div>
-      ${svg ? `<div class="print-map">${svg}</div>` : `<p class="print-empty">La carte n'est pas encore commencée.</p>`}
-      <p class="print-note">Les sources de chaque nœud sont détaillées ci-dessous. La couleur est doublée d'un symbole et d'un libellé.</p>
+      </header>
+      ${svg ? `<div class="print-map-landscape">${svg}</div>` : `<p class="print-empty">La carte n'est pas encore commencée.</p>`}
+      <p class="print-note">Carte réalisée par le groupe, dans la disposition qu'il a choisie. Les sources de chaque nœud sont détaillées page suivante.</p>
     </section>
 
     <section class="print-section print-detail-section">
@@ -1000,6 +1316,11 @@ function buildPrintDoc() {
 }
 
 function openPreview() {
+  const status = exportStatus();
+  if (!status.blocking) {
+    toast("Complète d'abord l'identité, les questions et les étapes du dossier.");
+    return;
+  }
   const html = buildPrintDoc();
   const printDoc = $("#printDoc");
   const previewBody = $("#previewBody");
@@ -1010,13 +1331,17 @@ function openPreview() {
 }
 
 function printCurrent() {
+  if (!exportStatus().blocking) {
+    toast("Le dossier doit être complet avant l'impression.");
+    return;
+  }
   const previousTitle = document.title;
-  const name = state.studentName.trim() || "eleve";
+  const className = String(state.group.className || "").trim() || "groupe";
   const date = new Date().toISOString().slice(0, 10);
   const dialog = $("#previewDialog");
   const wasOpen = Boolean(dialog && dialog.open);
   if (wasOpen) dialog.close();
-  document.title = `Dossier de controle URSS-Allemagne — ${name} — ${date}`;
+  document.title = `Dossier de controle ${className} — ${date}`;
   state.exportedAt = new Date().toISOString();
   saveNow();
   window.print();
@@ -1031,13 +1356,13 @@ function printCurrent() {
 }
 
 function backup() {
-  const name = state.studentName.trim() || "eleve";
+  const className = String(state.group.className || "").trim() || "groupe";
   const date = new Date().toISOString().slice(0, 10);
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `sauvegarde-enquete-regimes-${slugify(name)}-${date}.json`;
+  a.download = `sauvegarde-enquete-${slugify(className)}-${date}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -1077,11 +1402,9 @@ async function resetActivity(confirmFirst = true) {
 }
 
 function renderAll() {
-  const nameInput = $("#studentName");
-  if (nameInput && document.activeElement !== nameInput) nameInput.value = state.studentName || "";
+  renderIdentity();
   renderBriefing();
   renderDossiers();
-  renderImages();
   renderMechanisms();
   renderSort();
   bindConclusion();
@@ -1094,14 +1417,11 @@ function renderAll() {
   const conclusion = $("#conclusionInput");
   if (conclusion && document.activeElement !== conclusion) conclusion.value = state.conclusion || "";
   updateConclusionCount();
+  renderExportGate();
 }
 
 function bindStatic() {
-  const nameInput = $("#studentName");
-  nameInput.addEventListener("input", () => {
-    state.studentName = nameInput.value;
-    scheduleSave();
-  });
+  bindIdentity();
 
   $$("[data-step-target]").forEach((button) => {
     button.addEventListener("click", () => goToStep(button.dataset.stepTarget));

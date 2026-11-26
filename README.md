@@ -13,13 +13,17 @@ Le parcours suit six étapes :
 1. **Briefing** : mission, objectifs, avertissement sur les contenus difficiles.
 2. **Enquête** : quatre dossiers documentaires courts, en français, avec questions d'observation et de contextualisation.
 3. **Mécanismes** : neuf affirmations à attribuer à l'URSS, à l'Allemagne nazie ou aux deux.
-4. **Comparer** : quatorze éléments à trier entre « points communs », « URSS », « Allemagne nazie » et « à vérifier / à nuancer ».
-5. **Carte** : canevas déplaçable et zoomable, nœuds, liens, notes, sources, modèles, annuler/rétablir.
+4. **Comparer** : seize éléments à trier entre « points communs », « URSS », « Allemagne nazie » et « à vérifier / à nuancer » (dont des images de propagande).
+5. **Carte** : canevas déplaçable et zoomable, nœuds, liens, notes, sources, annuler/rétablir. La carte se crée uniquement à partir du tri, puis se modifie librement.
 6. **Vérifier** : critères de réussite, conclusion comparative, aperçu et export PDF.
 
 En version contrôle, les étapes 2 à 4 ne donnent ni piste, ni synthèse, ni correction immédiate. Les réponses sont enregistrées puis reprises dans l'export PDF.
 
 La progression est enregistrée automatiquement dans le navigateur (IndexedDB, avec repli sur `localStorage`). Aucun compte n'est nécessaire. Une sauvegarde JSON peut être téléchargée et réimportée.
+
+### Identité du groupe
+
+En haut à droite, le groupe renseigne sa classe et les prénoms/noms de **3 à 6 élèves**. L'export PDF reprend tous les noms et la classe. Le bouton d'export reste bloqué tant que l'identité, les questions, les mécanismes, le tri, la carte et la conclusion ne sont pas complets.
 
 ## Les quatre dossiers
 
@@ -34,9 +38,9 @@ Les dossiers sont des **synthèses courtes**, pas des recueils de citations. Les
 
 ### Images fournies
 
-Trois montages fournis dans le dossier `studio` sont intégrés à l'étape d'enquête : deux portraits rapprochés et un montage en deux camps. Ils sont présentés comme des **documents à analyser**, avec une légende, la mention « source et droits à préciser » et un avertissement sur les symboles.
+Les trois montages du dossier `studio` servent de **décor** : le montage en deux camps est utilisé en filigrane très léger sur le fond, et les deux portraits apparaissent comme des photos d'archives dans le briefing. Ils ne servent pas de documents d'enquête et ne sont pas reproduits dans l'export PDF.
 
-Deux fichiers du dossier `studio` ne sont pas utilisés dans l'interface : `croix-gammees.gif` (croix gammée isolée) et `faucille et marteau.png` (symbole soviétique isolé). Un symbole isolé, sans document à analyser, relèverait d'une esthétique de propagande ou d'un symbole haineux décoratif, ce que la consigne visuelle exclut. Les symboles apparaissent uniquement dans les montages, avec un cadre critique.
+Deux fichiers du dossier `studio` ne sont pas utilisés : `croix-gammees.gif` (croix gammée isolée) et `faucille et marteau.png` (symbole soviétique isolé). Un symbole isolé, sans document à analyser, relèverait d'une esthétique de propagande ou d'un symbole haineux décoratif, ce que la consigne visuelle exclut.
 
 Le tableau de synthèse d'origine n'est pas reproduit dans le dépôt : il n'a pas été fourni dans la session de travail. Les quatre dossiers permettent de le vérifier et de corriger ses formulations trop simples (Hitler « élu », régimes « identiques », nazisme « socialiste », Staline au pouvoir « en 1924 »).
 
@@ -76,11 +80,13 @@ GitHub Pages reconstruit automatiquement le site.
 
 ```text
 index.html      structure des six étapes et des dialogues
-styles.css      identité visuelle, responsive, styles d'impression
+styles.css      base visuelle, responsive, styles d'impression
+theme.css       thème « dossier d'archives » (pochettes, boîte à outils, filigrane)
 content.js      contenus historiques, questions, glossaire, bibliographie
-app.js          logique du parcours, sauvegarde, export
-map.js          canevas de carte mentale et rendu imprimable
+app.js          logique du parcours, identité du groupe, sauvegarde, export
+map.js          canevas de carte mentale et rendu spatial imprimable
 storage.js      IndexedDB avec repli localStorage
+assets/images/  images d'ambiance fournies par l'enseignant
 ```
 
 Le contenu historique est séparé de l'interface : pour corriger un texte, une date ou une source, modifier `content.js` en priorité.
@@ -90,7 +96,7 @@ Le contenu historique est séparé de l'interface : pour corriger un texte, une 
 - **Sauvegarde automatique** : étape atteinte, réponses, tri, carte, réglages, conclusion.
 - **Reprise** : au retour, l'application propose de reprendre ou de recommencer.
 - **Sauvegarde de secours** : fichier JSON téléchargeable et réimportable.
-- **Export PDF** : aperçu, puis impression du navigateur avec « Enregistrer au format PDF ». Le document contient le titre, le nom de l'élève, **les réponses aux questions, les choix de mécanismes et le tri**, la carte, le détail des nœuds avec leurs sources, la conclusion et la bibliographie.
+- **Export PDF** : aperçu, puis impression du navigateur avec « Enregistrer au format PDF ». Le document contient le titre, **les noms des 3 à 6 élèves et la classe**, les réponses aux questions, les choix de mécanismes, le tri, la carte **dans la disposition créée par le groupe sur une page paysage**, le détail des nœuds avec leurs sources, la conclusion et la bibliographie. L'export est bloqué tant que l'identité du groupe, les questions, les mécanismes, le tri, la carte et la conclusion ne sont pas complets.
 
 Les données restent sur l'appareil. Elles peuvent être perdues si le navigateur ou les données du site sont effacés, ou si l'élève change d'appareil. Le cache local ne garantit pas une conservation permanente.
 
@@ -100,8 +106,8 @@ Les données restent sur l'appareil. Elles peuvent être perdues si le navigateu
 - **PDF via l'impression du navigateur** : le rendu dépend du navigateur (Chrome, Edge, Firefox). L'aperçu est là pour vérifier avant impression.
 - **Sources secondaires** : EHNE, Histoire par l'image et USHMM sont des analyses d'historiens ; les décrets et lois sont des textes primaires. L'application ne remplace pas un manuel ni une validation par l'enseignant.
 - **Langues** : les dossiers sont en français ; les textes originaux du GHDI sont en allemand et en anglais, et sont reformulés.
-- **Images** : les trois montages fournis sont intégrés avec leur cadre critique. Aucune image d'archive supplémentaire n'est ajoutée. Les droits des images fournies ne sont pas vérifiés : elles sont publiées ici à la demande de l'enseignant et ne sont pas reproduites dans l'export PDF. Il faut vérifier leur provenance avant une diffusion publique large.
-- **Accessibilité** : navigation clavier, contrastes, catégories signalées par couleur + symbole + libellé, vue liste alternative au canevas. Le canevas spatial reste difficile à utiliser avec un lecteur d'écran ; la vue liste est prévue pour cela.
+- **Images** : les trois montages fournis servent de décor (filigrane et photos d'archives) ; ils ne sont pas reproduits dans l'export PDF. Les droits des images fournies ne sont pas vérifiés : elles sont publiées ici à la demande de l'enseignant. Il faut vérifier leur provenance avant une diffusion publique large.
+- **Accessibilité** : navigation clavier conservée, contrastes, catégories signalées par couleur + symbole + libellé, vue liste alternative au canevas. Les conseils de raccourcis clavier ont été retirés de l'interface pour privilégier la tablette. Le canevas spatial reste difficile à utiliser avec un lecteur d'écran ; la vue liste est prévue pour cela.
 
 ## Droits
 

@@ -6,6 +6,7 @@
   <meta name="description" content="Enquête historique et carte mentale comparant l'URSS de Staline et l'Allemagne nazie, pour des élèves de troisième." />
   <title>Contrôle — Deux régimes totalitaires — URSS de Staline / Allemagne nazie</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="theme.css" />
   <link rel="icon" href="data:," />
 </head>
 <body>
@@ -18,10 +19,24 @@
       <p class="brand-sub">L'URSS de Staline et l'Allemagne nazie</p>
     </div>
     <div class="header-tools">
-      <label class="name-field">
-        <span>Ton nom (pour l'export)</span>
-        <input id="studentName" type="text" maxlength="60" autocomplete="off" placeholder="Prénom ou initiales" />
-      </label>
+      <details class="identity-panel" id="identityPanel">
+        <summary>
+          <span class="identity-kicker">Nom, prénom, classe</span>
+          <strong id="identitySummary">Identité à compléter</strong>
+        </summary>
+        <div class="identity-body">
+          <label class="field">
+            <span>Classe</span>
+            <input id="className" type="text" maxlength="20" autocomplete="off" placeholder="Ex. : 3e B" />
+          </label>
+          <div id="memberList" class="member-list"></div>
+          <div class="identity-actions">
+            <button type="button" class="button ghost small" id="addMember">+ Ajouter un élève</button>
+            <span class="muted small" id="memberHint">3 à 6 élèves</span>
+          </div>
+          <p class="identity-warning" id="identityWarning" hidden>Complète la classe et les noms pour pouvoir exporter.</p>
+        </div>
+      </details>
       <div class="header-actions">
         <button type="button" class="button ghost small" data-open="glossaryDialog">Glossaire</button>
         <button type="button" class="button ghost small" data-open="helpDialog">Aide</button>
@@ -45,32 +60,48 @@
 
   <main id="main">
     <!-- ÉTAPE 0 : BRIEFING -->
-    <section class="step is-active" id="step-0" data-step="0" aria-labelledby="step0-title">
-      <div class="step-head">
-        <p class="kicker">Étape 1 · Briefing</p>
-        <h2 id="step0-title" tabindex="-1">La mission</h2>
-        <p class="lead" id="briefingMission"></p>
-      </div>
+    <section class="step is-active briefing-step" id="step-0" data-step="0" aria-labelledby="step0-title">
+      <div class="briefing-sheet">
+        <div class="briefing-head">
+          <p class="kicker">Étape 1 · Briefing</p>
+          <h2 id="step0-title" tabindex="-1">La mission</h2>
+          <p class="briefing-lead" id="briefingMission"></p>
+        </div>
 
-      <div class="grid two">
-        <article class="card paper">
-          <h3>Ce que tu dois produire</h3>
-          <ul class="check-list" id="objectivesList"></ul>
-        </article>
-        <article class="card paper caution">
-          <h3>Avant de commencer</h3>
-          <p id="briefingWarning"></p>
-          <p class="muted" id="briefingMethod"></p>
-        </article>
-      </div>
+        <div class="briefing-intro" id="briefingIntro"></div>
 
-      <div class="callout">
-        <strong>Le tableau de synthèse n'est pas une vérité toute faite.</strong>
-        <p>Il donne des pistes. Ton travail consiste à vérifier ses affirmations avec des documents, puis à construire une carte qui distingue les points communs, les éléments propres à chaque régime et ce qui doit être nuancé.</p>
-      </div>
+        <div class="briefing-strip">
+          <div class="briefing-objectives">
+            <h3>Ce que tu dois produire</h3>
+            <ul class="check-list" id="objectivesList"></ul>
+          </div>
+          <div class="briefing-steps">
+            <h3>Déroulé</h3>
+            <ol id="briefingSteps"></ol>
+          </div>
+        </div>
 
-      <div class="step-actions">
-        <button type="button" class="button primary" data-step-target="1">Commencer l'enquête</button>
+        <div class="briefing-notes">
+          <div>
+            <h3>Cadre du contrôle</h3>
+            <p id="briefingRules"></p>
+          </div>
+          <div>
+            <h3>À savoir</h3>
+            <p id="briefingWarning"></p>
+            <p class="muted" id="briefingMethod"></p>
+          </div>
+        </div>
+
+        <div class="archive-photos" aria-hidden="true">
+          <figure><img src="assets/images/portraits-staline-hitler.jpg" alt="" loading="lazy" /></figure>
+          <figure><img src="assets/images/hitler-staline-petit.jpg" alt="" loading="lazy" /></figure>
+          <span>Fonds d'archives — contrôle</span>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="button primary" data-step-target="1">Commencer l'enquête</button>
+        </div>
       </div>
     </section>
 
@@ -82,17 +113,6 @@
         <p class="lead">Ouvre chaque dossier. Lis les deux courts extraits, puis note ce que tu observes. Les questions ne demandent pas de réciter : elles t'aident à relier les faits, les mots et les sources.</p>
       </div>
       <div class="dossier-grid" id="dossierGrid"></div>
-      <section class="images-panel" aria-labelledby="images-title">
-        <div class="images-head">
-          <div>
-            <p class="kicker">Documents iconographiques</p>
-            <h3 id="images-title">Images fournies</h3>
-          </div>
-          <p class="muted">Montages fournis pour l'activité. Source et droits à préciser.</p>
-        </div>
-        <p class="caution-note"><strong>Précaution :</strong> ces montages contiennent des symboles des deux régimes. Ils sont présentés comme des documents à analyser, pas comme des modèles. Les symboles isolés ne sont pas utilisés comme icônes décoratives.</p>
-        <div id="imageGallery" class="image-gallery"></div>
-      </section>
       <details class="sources-panel">
         <summary>Sources des quatre dossiers</summary>
         <ul id="sourcesList"></ul>
@@ -123,7 +143,7 @@
       <div class="step-head">
         <p class="kicker">Étape 4 · Comparer</p>
         <h2 id="step3-title" tabindex="-1">Trier, distinguer, nuancer</h2>
-        <p class="lead">Sélectionne un élément, puis clique sur une colonne. Tu peux aussi le glisser. La colonne « À vérifier / à nuancer » accueille les affirmations trop simples ou fausses.</p>
+        <p class="lead">Sélectionne un élément, puis touche une colonne. Tu peux aussi le glisser. La colonne « À vérifier / à nuancer » accueille les affirmations trop simples, fausses ou de la propagande.</p>
       </div>
       <div class="sort-toolbar">
         <p class="muted" id="sortInstruction" role="status" aria-live="polite">Aucun élément sélectionné.</p>
@@ -146,30 +166,20 @@
       <div class="step-head compact">
         <p class="kicker">Étape 5 · Construire la carte mentale</p>
         <h2 id="step4-title" tabindex="-1">Ton canevas</h2>
-        <p class="lead">Déplace les nœuds, relie-les, ajoute des notes et des sources. Le canevas se déplace en glissant le fond ; la molette zoome.</p>
+        <p class="lead">Déplace les nœuds, relie-les, ajoute des notes et des sources. Glisse le fond pour déplacer le canevas ; pince ou utilise + / − pour zoomer.</p>
       </div>
 
       <div class="map-toolbar" role="toolbar" aria-label="Outils de la carte">
         <button type="button" class="button primary small" id="mapAddNode">+ Nœud</button>
         <button type="button" class="button secondary small" id="mapStartLink">Relier</button>
         <span class="toolbar-sep" aria-hidden="true"></span>
-        <button type="button" class="button ghost small" id="mapUndo" title="Annuler (Ctrl+Z)">Annuler</button>
-        <button type="button" class="button ghost small" id="mapRedo" title="Rétablir (Ctrl+Y)">Rétablir</button>
+        <button type="button" class="button ghost small" id="mapUndo">Annuler</button>
+        <button type="button" class="button ghost small" id="mapRedo">Rétablir</button>
         <span class="toolbar-sep" aria-hidden="true"></span>
         <button type="button" class="button ghost small" id="mapZoomOut" aria-label="Zoom arrière">−</button>
         <button type="button" class="button ghost small" id="mapZoomIn" aria-label="Zoom avant">+</button>
         <button type="button" class="button ghost small" id="mapFit">Ajuster</button>
         <span class="toolbar-sep" aria-hidden="true"></span>
-        <label class="toolbar-select">
-          <span class="sr-only">Modèle de carte</span>
-          <select id="mapTemplate">
-            <option value="">Modèle…</option>
-            <option value="compare">Comparaison</option>
-            <option value="enquete">Dossiers d'enquête</option>
-            <option value="vide">Vide</option>
-          </select>
-        </label>
-        <button type="button" class="button secondary small" id="mapFromSort">Depuis mon tri</button>
         <button type="button" class="button ghost small" id="mapOutlineToggle" aria-pressed="false">Vue liste</button>
       </div>
 
@@ -178,23 +188,20 @@
       <div class="map-layout">
         <div class="map-stage">
           <div class="map-viewport" id="mapViewport" tabindex="0"
-               aria-label="Canevas de la carte mentale. Utilise les flèches pour déplacer la vue, plus et moins pour zoomer. Les nœuds sont accessibles avec la touche Tab."
-               aria-describedby="mapKeyboardHelp">
+               aria-label="Canevas de la carte mentale. Glisse le fond pour déplacer la vue. Utilise les boutons plus et moins pour zoomer. Touche un nœud pour le modifier.">
             <div class="map-world" id="mapWorld">
               <svg id="mapLinks" class="map-links"></svg>
               <div id="mapNodes" class="map-nodes"></div>
             </div>
             <div class="map-empty" id="mapEmpty">
-              <h3>Choisis un point de départ</h3>
-              <p>Un modèle installe le sujet central et les branches. Tu pourras tout modifier ensuite.</p>
-              <div class="map-empty-actions">
-                <button type="button" class="button primary" data-template="compare">Modèle comparaison</button>
-                <button type="button" class="button secondary" data-template="enquete">Modèle dossiers</button>
-                <button type="button" class="button ghost" data-template="vide">Page blanche</button>
-              </div>
+              <p class="kicker">Construction guidée</p>
+              <h3>La carte part de ton tri</h3>
+              <p>Termine le tri des 16 éléments, puis crée la carte. Tu pourras ensuite la déplacer, la compléter et la mettre en forme.</p>
+              <button type="button" class="button primary" id="mapFromSort" disabled>Créer la carte à partir de mon tri</button>
+              <p class="map-sort-progress" id="mapSortProgress">0 / 16 éléments triés</p>
             </div>
           </div>
-          <p class="hint" id="mapKeyboardHelp">Clavier : Tab pour parcourir les nœuds, Entrée pour modifier, flèches pour déplacer, <kbd>L</kbd> pour relier, Suppr pour supprimer. <kbd>Ctrl</kbd> + <kbd>Z</kbd> annule.</p>
+          <p class="hint" id="mapTouchHelp">Glisse le fond pour déplacer. Pince avec deux doigts ou utilise + / − pour zoomer. Touche un nœud pour le modifier.</p>
         </div>
         <aside class="map-inspector" id="mapInspector" aria-label="Panneau du nœud sélectionné"></aside>
       </div>
@@ -236,16 +243,17 @@
       </div>
 
       <div class="export-panel">
-        <div>
+        <div class="export-info">
           <h3>Exporter mon dossier en PDF</h3>
           <p class="muted">Un aperçu s'ouvre avant l'impression. Le PDF contient tes réponses aux questions, tes choix de mécanismes, ton tri, ta carte, ta conclusion et les sources. Dans la fenêtre d'impression, choisis « Enregistrer au format PDF ».</p>
         </div>
         <div class="export-actions">
-          <button type="button" class="button primary" id="previewButton">Exporter mon dossier en PDF</button>
+          <button type="button" class="button primary" id="previewButton" aria-describedby="exportGate">Exporter mon dossier en PDF</button>
           <button type="button" class="button secondary" id="backupButton2">Télécharger une sauvegarde</button>
           <button type="button" class="button ghost" id="importButton">Importer une sauvegarde</button>
           <input type="file" id="importInput" accept="application/json,.json" hidden />
         </div>
+        <div class="export-status" id="exportGate" aria-live="polite"></div>
       </div>
 
       <div class="callout subtle">
@@ -307,19 +315,18 @@
   <dialog id="helpDialog" class="modal" aria-labelledby="helpTitle">
     <div class="modal-inner">
       <div class="modal-head">
-        <h2 id="helpTitle">Aide et raccourcis</h2>
+        <h2 id="helpTitle">Aide</h2>
         <button type="button" class="icon-button" data-close-dialog="helpDialog" aria-label="Fermer l'aide">×</button>
       </div>
       <h3>Le parcours</h3>
-      <p>Les six étapes se suivent, mais tu peux revenir en arrière à tout moment. Ta progression est enregistrée automatiquement.</p>
+      <p>Les six étapes se suivent. La progression est enregistrée automatiquement.</p>
       <h3>Le canevas</h3>
       <ul class="help-list">
         <li>Glisse le fond pour déplacer la vue.</li>
-        <li>Molette ou boutons <strong>+</strong> / <strong>−</strong> pour zoomer.</li>
+        <li>Pince avec deux doigts ou utilise les boutons <strong>+</strong> / <strong>−</strong> pour zoomer.</li>
         <li><strong>+ Nœud</strong> ajoute une idée au centre de la vue.</li>
-        <li>Sélectionne un nœud puis <strong>Relier</strong>, et clique sur le nœud d'arrivée.</li>
-        <li><kbd>Tab</kbd> parcourt les nœuds ; <kbd>Entrée</kbd> ouvre le panneau ; les flèches déplacent ; <kbd>L</kbd> relie ; <kbd>Suppr</kbd> supprime.</li>
-        <li><kbd>Ctrl</kbd> + <kbd>Z</kbd> annule, <kbd>Ctrl</kbd> + <kbd>Y</kbd> rétablit.</li>
+        <li>Touche un nœud, puis <strong>Relier</strong>, et touche le nœud d'arrivée.</li>
+        <li>Utilise <strong>Annuler</strong> et <strong>Rétablir</strong> pour revenir sur une action.</li>
       </ul>
       <h3>Accessibilité</h3>
       <p>La <strong>Vue liste</strong> donne une alternative textuelle au canevas. Les catégories sont signalées par une couleur, un symbole et un libellé : la couleur n'est jamais le seul repère.</p>

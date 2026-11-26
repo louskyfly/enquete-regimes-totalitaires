@@ -2,7 +2,7 @@ export const META = {
   title: "Contrôle — Deux régimes totalitaires",
   subtitle: "L'URSS de Staline et l'Allemagne nazie",
   level: "Troisième",
-  version: "1.1",
+  version: "1.2",
   updated: "26 novembre 2026"
 };
 
@@ -10,59 +10,34 @@ export const META = {
 // automatiques. Passer à false pour retrouver la version d'entraînement.
 export const CONTROL_MODE = true;
 
-export const IMAGES = [
-  {
-    id: "img-montage",
-    src: "assets/images/staline-hitler-montage.jpg",
-    alt: "Montage en deux parties : Staline à gauche devant un drapeau soviétique, Hitler à droite devant des drapeaux nazis.",
-    title: "Staline et Hitler, un montage en deux camps",
-    nature: "Montage graphique",
-    caption:
-      "Staline à gauche, Hitler à droite, chacun sur fond de symboles de son régime. Ce n'est pas une photographie de rencontre : c'est un montage qui construit un face-à-face.",
-    credit: "Image fournie par l'enseignant — source et date à préciser.",
-    caution:
-      "L'image contient des symboles nazis et soviétiques. Elle est montrée comme un document à analyser, pas comme une illustration à admirer."
-  },
-  {
-    id: "img-portraits",
-    src: "assets/images/portraits-staline-hitler.jpg",
-    alt: "Portraits rapprochés de Staline et Hitler en noir et blanc.",
-    title: "Deux portraits rapprochés",
-    nature: "Montage de portraits",
-    caption:
-      "Deux portraits d'apparatchiks et de chefs de guerre rapprochés dans une même image. Le cadrage serré et le noir et blanc donnent une impression de puissance et de gravité.",
-    credit: "Image fournie par l'enseignant — source et date à préciser.",
-    caution:
-      "Montage, et non photographie d'une rencontre. Les effets de cadrage et de contraste doivent être questionnés."
-  },
-  {
-    id: "img-petit",
-    src: "assets/images/hitler-staline-petit.jpg",
-    alt: "Petit montage de deux portraits de Hitler et Staline sur un fond sombre.",
-    title: "Un face-à-face compact",
-    nature: "Montage de portraits",
-    caption:
-      "Un format réduit, presque une vignette, qui rapproche les deux dictateurs. L'arrière-plan flou et le contraste noir et blanc renforcent l'effet dramatique.",
-    credit: "Image fournie par l'enseignant — source et date à préciser.",
-    caution:
-      "Montage. Il ne prouve pas une rencontre et ne résume pas à lui seul l'histoire des deux régimes."
-  }
-];
-
 export const BRIEFING = {
   mission:
-    "Un comité prépare une exposition comparée sur l'URSS de Staline et l'Allemagne nazie. Il dispose d'un tableau de synthèse, mais plusieurs affirmations sont trop simples ou fausses. Ta mission : vérifier ce tableau à partir de quatre dossiers documentaires, puis construire une carte mentale qui distingue les points communs, les différences et les affirmations à nuancer.",
+    "Comparer l'URSS de Staline et l'Allemagne nazie à partir de quatre dossiers, puis construire une carte mentale sourcée.",
+  intro: [
+    "Ce contrôle porte sur deux régimes totalitaires de l'entre-deux-guerres : l'URSS de Staline et l'Allemagne nazie. Il ne s'agit pas de les mettre sur le même plan, mais de comparer leur fonctionnement, leurs idéologies et leurs violences.",
+    "Vous travaillez à partir de quatre dossiers courts. Le tableau de synthèse fourni est un point de départ : il faut le vérifier. Les réponses, le tri et la carte sont enregistrés dans le navigateur ; le PDF final reprend la carte du groupe, les réponses et les sources."
+  ],
   objectives: [
-    "Lire des documents historiques courts et identifier leur nature, leur auteur et leur contexte.",
+    "Lire quatre dossiers courts et identifier leur nature, leur auteur et leur contexte.",
     "Repérer les mécanismes communs aux deux régimes sans les confondre.",
-    "Distinguer deux idéologies opposées : le stalinisme et le nazisme.",
-    "Construire une carte mentale lisible, avec des mots-clés, des exemples et des sources.",
+    "Distinguer les deux idéologies et les affirmations à nuancer.",
+    "Construire une carte mentale avec des mots-clés, des exemples et des sources.",
     "Rédiger une conclusion comparative de trois à cinq phrases."
   ],
+  steps: [
+    "Lire les quatre dossiers.",
+    "Classer les mécanismes.",
+    "Trier les affirmations.",
+    "Créer la carte à partir du tri.",
+    "Rédiger la conclusion.",
+    "Exporter le dossier."
+  ],
+  rules:
+    "Vous travaillez en groupe de 3 à 6 élèves. Renseignez la classe et les noms en haut à droite. Le PDF n'est accessible que lorsque toutes les questions sont répondues et que l'identité du groupe est complète.",
   warning:
-    "Ce dossier parle de dictatures, de persécutions et de génocide. Aucune image d'exécution ou de cadavre n'est utilisée. Les textes peuvent être difficiles : tu peux demander une pause, et tu n'es jamais obligé(e) de tout lire seul(e).",
+    "Certains documents contiennent des symboles ou des propos difficiles. Ils sont étudiés comme des documents historiques, avec des précautions.",
   method:
-    "Chaque idée de ta carte devra être reliée à un dossier. Une affirmation sans source reste une hypothèse : place-la dans la catégorie « à vérifier / à nuancer »."
+    "Chaque idée de la carte doit être reliée à un dossier ou à un document. Une affirmation sans source est une hypothèse à vérifier."
 };
 
 export const DOSSIERS = [
@@ -287,7 +262,8 @@ export const DOSSIERS = [
         title: "Deux propagandes, deux idéologies",
         paragraphs: [
           "Les deux pavillons se ressemblent par leurs moyens : grandeur, ordre, mise en scène de la puissance. Ils diffèrent par leur message. L'URSS se présente comme le pays des travailleurs, du progrès et de l'industrie : la sculpture associe un ouvrier et une paysanne, et le réalisme socialiste célèbre le peuple.",
-          "L'Allemagne nazie se présente comme une communauté raciale et militaire, guidée par un chef : l'aigle, la croix gammée et l'architecture néoclassique disent la domination. Comparer ces images ne revient pas à dire que les deux régimes sont identiques : cela permet de voir des techniques communes au service d'idéologies opposées."
+          "L'Allemagne nazie se présente comme une communauté raciale et militaire, guidée par un chef : l'aigle, la croix gammée et l'architecture néoclassique disent la domination. Comparer ces images ne revient pas à dire que les deux régimes sont identiques : cela permet de voir des techniques communes au service d'idéologies opposées.",
+          "Une affiche de propagande n'est pas un sondage : elle montre ce que le parti veut faire croire. Il faut l'identifier comme telle et la confronter à d'autres sources."
         ]
       }
     ],
@@ -392,7 +368,7 @@ export const SORT_COLUMNS = [
   { id: "commun", label: "Points communs", hint: "Ce que les deux régimes partagent." },
   { id: "urss", label: "URSS de Staline", hint: "Ce qui est propre à l'URSS." },
   { id: "allemagne", label: "Allemagne nazie", hint: "Ce qui est propre à l'Allemagne nazie." },
-  { id: "nuance", label: "À vérifier / à nuancer", hint: "Affirmations trop simples, fausses ou imprécises." }
+  { id: "nuance", label: "À vérifier / à nuancer", hint: "Affirmations trop simples, fausses, imprécises, ou images de propagande à questionner.", stamp: "PROPAGANDE" }
 ];
 
 export const SORT_ITEMS = [
@@ -493,6 +469,22 @@ export const SORT_ITEMS = [
     nodeTitle: "Staline arrive en 1924 ?",
     answer: "nuance",
     feedback: "Imprécis. Lénine meurt en 1924, mais Staline est secrétaire général depuis 1922 et construit son pouvoir personnel jusqu'en 1929."
+  },
+  {
+    id: "s15",
+    text: "Une affiche du parti montre le chef acclamé par la foule : elle prouve que tout le peuple l'admire.",
+    nodeTitle: "Une affiche = l'opinion du peuple ?",
+    answer: "nuance",
+    feedback:
+      "C'est de la propagande : l'affiche montre ce que le parti veut faire croire, pas l'opinion réelle de toute la population. Il faut la confronter à d'autres sources."
+  },
+  {
+    id: "s16",
+    text: "Un journal officiel du parti présente les réalisations du régime : c'est un témoignage neutre.",
+    nodeTitle: "Un journal du parti = neutre ?",
+    answer: "nuance",
+    feedback:
+      "Non : un journal officiel est un média de propagande. Il donne la version du parti et doit être identifié comme tel, puis comparé à d'autres documents."
   }
 ];
 
