@@ -1,4 +1,4 @@
-# Enquête sur deux régimes totalitaires
+# Contrôle — Deux régimes totalitaires
 
 Application web pédagogique en français pour des élèves de troisième : comparer l'URSS de Staline et l'Allemagne nazie, vérifier un tableau de synthèse, puis construire une carte mentale sourcée.
 

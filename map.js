@@ -625,7 +625,7 @@ function renderInspector() {
       <button type="button" class="button secondary" data-action="add-node">Ajouter un nœud</button>
       <button type="button" class="button ghost" data-action="fit">Ajuster la vue</button>
     </div>
-    <p class="hint">Glisse le fond pour déplacer. Pince avec deux doigts ou utilise + / − pour zoomer.</p>
+    <p class="hint">Glisse le fond pour déplacer. Utilise les boutons + / − pour zoomer.</p>
   `;
 }
 

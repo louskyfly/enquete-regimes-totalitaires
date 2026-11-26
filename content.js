@@ -33,7 +33,7 @@ export const BRIEFING = {
     "Exporter le dossier."
   ],
   rules:
-    "Vous travaillez en groupe de 3 à 6 élèves. Renseignez la classe et les noms en haut à droite. Le PDF n'est accessible que lorsque toutes les questions sont répondues et que l'identité du groupe est complète.",
+    "Vous travaillez en groupe de 3 à 6 élèves. Renseignez la classe et les noms en haut à droite. Le PDF n'est accessible que lorsque le dossier est complet : identité, questions, mécanismes, tri, carte et conclusion.",
   warning:
     "Certains documents contiennent des symboles ou des propos difficiles. Ils sont étudiés comme des documents historiques, avec des précautions.",
   method:
