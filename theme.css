@@ -268,15 +268,15 @@
   .briefing-sheet::after {
     content: "CONTRÔLE";
     position: absolute;
-    top: 18px;
-    right: 22px;
+    top: 22px;
+    right: 24px;
     color: #8b2f2f;
-    border: 2px solid #8b2f2f;
-    padding: 5px 10px;
+    border: 3px solid #8b2f2f;
+    padding: 8px 16px;
     font-family: "Courier New", monospace;
-    font-size: 0.75rem;
+    font-size: 1.15rem;
     font-weight: 800;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.18em;
     transform: rotate(4deg);
     opacity: 0.78;
     pointer-events: none;
@@ -298,10 +298,9 @@
   }
 
   .briefing-intro {
-    column-count: 2;
-    column-gap: 2.6rem;
-    column-rule: 1px solid rgba(139, 106, 63, 0.25);
-    text-align: justify;
+    column-count: 1;
+    column-gap: 0;
+    text-align: left;
     hyphens: auto;
     font-size: 1.02rem;
     color: #3f3325;
@@ -372,8 +371,8 @@
 
   .briefing-notes {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 22px;
+    grid-template-columns: 1fr;
+    gap: 14px;
     border-top: 1px solid #c9b18e;
     padding-top: 18px;
   }
@@ -494,15 +493,15 @@
 
   .dossier-stamp {
     position: absolute;
-    top: 38px;
-    right: 16px;
+    top: 34px;
+    right: 14px;
     color: #922f2f;
-    border: 2px solid #922f2f;
-    padding: 3px 7px;
+    border: 3px solid #922f2f;
+    padding: 6px 13px;
     font-family: "Courier New", monospace;
-    font-size: 0.66rem;
+    font-size: 1rem;
     font-weight: 800;
-    letter-spacing: 0.13em;
+    letter-spacing: 0.16em;
     transform: rotate(-9deg);
     opacity: 0.78;
     pointer-events: none;
@@ -811,14 +810,14 @@
   .column-stamp {
     position: static;
     display: inline-block;
-    margin: 2px 0 4px;
+    margin: 4px 0 6px;
     color: #8b2f2f;
-    border: 1.5px solid #8b2f2f;
-    padding: 2px 5px;
+    border: 2.5px solid #8b2f2f;
+    padding: 5px 11px;
     font-family: "Courier New", monospace;
-    font-size: 0.56rem;
+    font-size: 0.9rem;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     transform: rotate(-4deg);
     opacity: 0.78;
     pointer-events: none;
@@ -1139,3 +1138,44 @@
     width: 100%;
   }
 }
+
+  /* ---------- Tri : tuiles de même taille et glisser-déposer ---------- */
+
+  .sort-item {
+    min-height: 68px;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .sort-item-main {
+    min-height: 66px;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    text-align: left;
+  }
+
+  .sort-item.is-dragging {
+    opacity: 0.35;
+  }
+
+  .sort-ghost {
+    position: fixed;
+    z-index: 300;
+    pointer-events: none;
+    opacity: 0.94;
+    box-shadow: 0 14px 30px rgba(40, 25, 10, 0.3);
+    transform: rotate(-1.6deg) !important;
+  }
+
+  body.is-sort-dragging,
+  body.is-sort-dragging * {
+    cursor: grabbing !important;
+    user-select: none;
+  }
+
+  .sort-column.is-over {
+    outline: 3px dashed #7d2f2f;
+    outline-offset: 3px;
+    background: linear-gradient(180deg, #fbf0d8, #efdcbb);
+  }

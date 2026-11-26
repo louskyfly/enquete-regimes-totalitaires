@@ -36,6 +36,7 @@ let mapReady = false;
 let mapFittedVisible = false;
 let conclusionBound = false;
 let selectedSortItem = null;
+let suppressSortClick = false;
 let currentDossierId = null;
 let toastTimer = null;
 
@@ -691,7 +692,7 @@ function renderSort() {
   pool.innerHTML = unplaced.length
     ? unplaced
         .map(
-          (item) => `<div class="sort-item ${selectedSortItem === item.id ? "is-selected" : ""}" draggable="true" data-sort-id="${esc(item.id)}">
+          (item) => `<div class="sort-item ${selectedSortItem === item.id ? "is-selected" : ""}" data-sort-id="${esc(item.id)}">
             <button type="button" class="sort-item-main" data-sort-id="${esc(item.id)}">${esc(item.text)}</button>
           </div>`
         )
@@ -714,7 +715,7 @@ function renderSort() {
                   const checked = !CONTROL_MODE && state.sortChecked;
                   const correct = checked && state.sort[item.id] === item.answer;
                   const wrong = checked && state.sort[item.id] !== item.answer;
-                  return `<div class="sort-item is-placed ${selectedSortItem === item.id ? "is-selected" : ""} ${correct ? "is-correct" : ""} ${wrong ? "is-wrong" : ""}" draggable="true" data-sort-id="${esc(item.id)}">
+                  return `<div class="sort-item is-placed ${selectedSortItem === item.id ? "is-selected" : ""} ${correct ? "is-correct" : ""} ${wrong ? "is-wrong" : ""}" data-sort-id="${esc(item.id)}">
                     <button type="button" class="sort-item-main" data-sort-id="${esc(item.id)}">${esc(item.text)}</button>
                     <button type="button" class="sort-remove" data-remove="${esc(item.id)}" aria-label="Retirer ${esc(item.text)}">×</button>
                   </div>`;
@@ -802,6 +803,7 @@ function bindSort() {
   }
 
   function handleClick(event) {
+    if (suppressSortClick) return;
     const remove = event.target.closest("[data-remove]");
     if (remove) {
       event.stopPropagation();
@@ -839,6 +841,88 @@ function bindSort() {
 
   board.addEventListener("click", handleClick);
   pool.addEventListener("click", handleClick);
+
+  /* Glisser-déposer au doigt (iPad) ou à la souris */
+  let pointerDrag = null;
+
+  function clearDropHighlight() {
+    $$(".sort-column.is-over").forEach((column) => column.classList.remove("is-over"));
+  }
+
+  function handlePointerDown(event) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    const item = event.target.closest(".sort-item");
+    if (!item || event.target.closest(".sort-remove")) return;
+    pointerDrag = {
+      id: item.dataset.sortId,
+      item,
+      startX: event.clientX,
+      startY: event.clientY,
+      moved: false,
+      ghost: null
+    };
+  }
+
+  function handlePointerMove(event) {
+    if (!pointerDrag) return;
+    const drag = pointerDrag;
+    if (!drag.moved) {
+      if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 8) return;
+      drag.moved = true;
+      const rect = drag.item.getBoundingClientRect();
+      const ghost = drag.item.cloneNode(true);
+      ghost.classList.add("sort-ghost");
+      ghost.style.width = `${rect.width}px`;
+      ghost.style.height = `${rect.height}px`;
+      document.body.appendChild(ghost);
+      drag.ghost = ghost;
+      drag.item.classList.add("is-dragging");
+      document.body.classList.add("is-sort-dragging");
+    }
+    event.preventDefault();
+    if (drag.ghost) {
+      const rect = drag.ghost.getBoundingClientRect();
+      drag.ghost.style.left = `${event.clientX - rect.width / 2}px`;
+      drag.ghost.style.top = `${event.clientY - 18}px`;
+    }
+    clearDropHighlight();
+    const under = document.elementFromPoint(event.clientX, event.clientY);
+    const column = under ? under.closest(".sort-column") : null;
+    if (column) column.classList.add("is-over");
+  }
+
+  function handlePointerUp(event) {
+    if (!pointerDrag) return;
+    const drag = pointerDrag;
+    pointerDrag = null;
+    document.body.classList.remove("is-sort-dragging");
+    clearDropHighlight();
+    if (drag.ghost) drag.ghost.remove();
+    drag.item.classList.remove("is-dragging");
+    if (!drag.moved) return;
+    suppressSortClick = true;
+    setTimeout(() => {
+      suppressSortClick = false;
+    }, 250);
+    const under = document.elementFromPoint(event.clientX, event.clientY);
+    const column = under ? under.closest(".sort-column") : null;
+    if (column) {
+      placeSortItem(drag.id, column.dataset.column);
+      return;
+    }
+    if (under && under.closest("#sortPool")) {
+      delete state.sort[drag.id];
+      state.sortChecked = false;
+      scheduleSave();
+      renderSort();
+      updateChecklist();
+    }
+  }
+
+  [board, pool].forEach((zone) => zone.addEventListener("pointerdown", handlePointerDown));
+  document.addEventListener("pointermove", handlePointerMove, { passive: false });
+  document.addEventListener("pointerup", handlePointerUp);
+  document.addEventListener("pointercancel", handlePointerUp);
 
   function dragStart(event) {
     const item = event.target.closest(".sort-item");

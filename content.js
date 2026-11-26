@@ -30,7 +30,7 @@ export const BRIEFING = {
     "Trier les affirmations.",
     "Créer la carte à partir du tri.",
     "Rédiger la conclusion.",
-    "Exporter le dossier ou l'envoyer au professeur."
+    "Envoyer le dossier au professeur."
   ],
   rules:
     "Vous travaillez en binôme (2 élèves). Renseignez la classe et les deux noms en haut à droite. Durée : 1 heure. Le PDF et l'envoi au professeur ne sont accessibles que lorsque le dossier est complet : identité, questions, mécanismes, tri, carte et conclusion.",
