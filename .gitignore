@@ -6,3 +6,8 @@ _shot-*.png
 _test.mjs
 _shots.mjs
 .DS_Store
+
+_control*
+_images*
+_print*
+_imgcheck*

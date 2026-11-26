@@ -1,6 +1,6 @@
 {
   "name": "enquete-regimes-totalitaires",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "Enquête historique et carte mentale comparant l'URSS de Staline et l'Allemagne nazie (Troisième).",

@@ -524,6 +524,88 @@ main {
 }
 .sources-panel li { margin-bottom: 7px; }
 .sources-panel a { word-break: break-all; }
+
+/* ---------- Images fournies ---------- */
+
+.images-panel {
+  margin-top: 18px;
+  padding: 18px 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.images-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.images-head h3 { margin: 0; }
+.images-head p { margin: 0; font-size: 0.8rem; }
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.image-card {
+  margin: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.image-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+  padding: 8px;
+  display: block;
+  border-bottom: 1px solid var(--line);
+  filter: saturate(0.78) contrast(0.98);
+  background: #f2ece2;
+}
+.image-card figcaption {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.84rem;
+}
+.image-nature {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 800;
+}
+.image-card strong {
+  font-family: var(--font-title);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+.image-card p { margin: 0; }
+.image-credit { color: var(--muted); font-size: 0.74rem; }
+.image-caution {
+  color: var(--ink-2);
+  font-size: 0.76rem;
+  border-left: 2px solid var(--gold);
+  padding-left: 8px;
+}
+.question-number {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-right: 5px;
+}
 .dossier-progress {
   display: flex;
   flex-wrap: wrap;
@@ -1368,6 +1450,53 @@ main {
 .print-empty { font-size: 9.5pt; color: #666; font-style: italic; }
 .print-biblio ul { padding-left: 4mm; }
 .print-biblio li { margin-bottom: 1.5mm; font-size: 8.5pt; }
+.print-answers-group {
+  margin: 0 0 4mm;
+  break-inside: auto;
+}
+.print-answers-group h3 {
+  font-family: var(--font-body);
+  font-size: 10pt;
+  margin: 0 0 1.5mm;
+  color: #222;
+}
+.print-answers-group h3 span {
+  color: #666;
+  font-weight: 400;
+  font-size: 8.5pt;
+}
+.print-answers-group ol { padding-left: 5mm; margin: 0; }
+.print-answers-group li { margin: 0 0 2.2mm; break-inside: avoid; }
+.print-question {
+  font-weight: 650;
+  margin: 0 0 0.4mm;
+  font-size: 9.5pt;
+}
+.print-answer {
+  margin: 0 0 1mm;
+  padding-left: 2.5mm;
+  border-left: 2px solid #d7cdbd;
+  font-size: 9.5pt;
+}
+.print-subtitle {
+  font-family: var(--font-body);
+  font-size: 10.5pt;
+  margin: 4mm 0 1.5mm;
+}
+.print-choice-list { list-style: none; padding: 0; margin: 0; }
+.print-choice-list li {
+  display: flex;
+  gap: 3mm;
+  justify-content: space-between;
+  border-bottom: 1px dotted #d9d0c1;
+  padding: 1mm 0;
+  font-size: 9.3pt;
+  break-inside: avoid;
+}
+.print-choice-q { flex: 1; }
+.print-choice-a { font-weight: 700; white-space: nowrap; }
+.print-map-section { break-before: page; }
+.print-detail-section { break-before: page; }
 .print-footer {
   margin-top: 8mm;
   padding-top: 2mm;
@@ -1414,6 +1543,7 @@ main {
   .map-layout { grid-template-columns: 1fr; }
   .map-inspector { max-height: none; }
   .map-viewport { height: 560px; }
+  .image-gallery { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 680px) {
@@ -1433,6 +1563,8 @@ main {
   .field-row { grid-template-columns: 1fr; }
   .step-actions { flex-direction: column-reverse; align-items: stretch; }
   .step-actions .button { width: 100%; }
+  .image-gallery { grid-template-columns: 1fr; }
+  .image-card img { height: 220px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1474,6 +1606,8 @@ main {
   .print-doc h2 { font-size: 13pt; }
   .print-map svg { max-height: 205mm; }
   .print-section { break-inside: avoid; }
+  .print-answers-section { break-inside: auto; }
+  .print-answers-group { break-inside: auto; }
   .print-group { break-inside: avoid; }
   .print-biblio { break-before: page; }
   .print-footer { break-inside: avoid; }

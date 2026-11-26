@@ -1,10 +1,53 @@
 export const META = {
-  title: "Enquête sur deux régimes totalitaires",
+  title: "Contrôle — Deux régimes totalitaires",
   subtitle: "L'URSS de Staline et l'Allemagne nazie",
   level: "Troisième",
-  version: "1.0",
+  version: "1.1",
   updated: "26 novembre 2026"
 };
+
+// Mode contrôle : masque les indices, les synthèses et les corrections
+// automatiques. Passer à false pour retrouver la version d'entraînement.
+export const CONTROL_MODE = true;
+
+export const IMAGES = [
+  {
+    id: "img-montage",
+    src: "assets/images/staline-hitler-montage.jpg",
+    alt: "Montage en deux parties : Staline à gauche devant un drapeau soviétique, Hitler à droite devant des drapeaux nazis.",
+    title: "Staline et Hitler, un montage en deux camps",
+    nature: "Montage graphique",
+    caption:
+      "Staline à gauche, Hitler à droite, chacun sur fond de symboles de son régime. Ce n'est pas une photographie de rencontre : c'est un montage qui construit un face-à-face.",
+    credit: "Image fournie par l'enseignant — source et date à préciser.",
+    caution:
+      "L'image contient des symboles nazis et soviétiques. Elle est montrée comme un document à analyser, pas comme une illustration à admirer."
+  },
+  {
+    id: "img-portraits",
+    src: "assets/images/portraits-staline-hitler.jpg",
+    alt: "Portraits rapprochés de Staline et Hitler en noir et blanc.",
+    title: "Deux portraits rapprochés",
+    nature: "Montage de portraits",
+    caption:
+      "Deux portraits d'apparatchiks et de chefs de guerre rapprochés dans une même image. Le cadrage serré et le noir et blanc donnent une impression de puissance et de gravité.",
+    credit: "Image fournie par l'enseignant — source et date à préciser.",
+    caution:
+      "Montage, et non photographie d'une rencontre. Les effets de cadrage et de contraste doivent être questionnés."
+  },
+  {
+    id: "img-petit",
+    src: "assets/images/hitler-staline-petit.jpg",
+    alt: "Petit montage de deux portraits de Hitler et Staline sur un fond sombre.",
+    title: "Un face-à-face compact",
+    nature: "Montage de portraits",
+    caption:
+      "Un format réduit, presque une vignette, qui rapproche les deux dictateurs. L'arrière-plan flou et le contraste noir et blanc renforcent l'effet dramatique.",
+    credit: "Image fournie par l'enseignant — source et date à préciser.",
+    caution:
+      "Montage. Il ne prouve pas une rencontre et ne résume pas à lui seul l'histoire des deux régimes."
+  }
+];
 
 export const BRIEFING = {
   mission:

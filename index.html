@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Enquête historique et carte mentale comparant l'URSS de Staline et l'Allemagne nazie, pour des élèves de troisième." />
-  <title>Enquête sur deux régimes totalitaires — URSS de Staline / Allemagne nazie</title>
+  <title>Contrôle — Deux régimes totalitaires — URSS de Staline / Allemagne nazie</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="data:," />
 </head>
@@ -13,7 +13,7 @@
 
   <header class="app-header">
     <div class="brand">
-      <p class="brand-kicker">Dossier d'enquête · Histoire · Troisième</p>
+      <p class="brand-kicker">Contrôle d'histoire · Troisième</p>
       <h1>Deux régimes totalitaires</h1>
       <p class="brand-sub">L'URSS de Staline et l'Allemagne nazie</p>
     </div>
@@ -82,6 +82,17 @@
         <p class="lead">Ouvre chaque dossier. Lis les deux courts extraits, puis note ce que tu observes. Les questions ne demandent pas de réciter : elles t'aident à relier les faits, les mots et les sources.</p>
       </div>
       <div class="dossier-grid" id="dossierGrid"></div>
+      <section class="images-panel" aria-labelledby="images-title">
+        <div class="images-head">
+          <div>
+            <p class="kicker">Documents iconographiques</p>
+            <h3 id="images-title">Images fournies</h3>
+          </div>
+          <p class="muted">Montages fournis pour l'activité. Source et droits à préciser.</p>
+        </div>
+        <p class="caution-note"><strong>Précaution :</strong> ces montages contiennent des symboles des deux régimes. Ils sont présentés comme des documents à analyser, pas comme des modèles. Les symboles isolés ne sont pas utilisés comme icônes décoratives.</p>
+        <div id="imageGallery" class="image-gallery"></div>
+      </section>
       <details class="sources-panel">
         <summary>Sources des quatre dossiers</summary>
         <ul id="sourcesList"></ul>
@@ -209,7 +220,7 @@
 
       <div class="grid two">
         <article class="card paper">
-          <h3>Checklist de la carte</h3>
+          <h3>Critères de réussite</h3>
           <ul class="checklist" id="checklist"></ul>
           <button type="button" class="button secondary small" id="checkRefresh">Mettre à jour la vérification</button>
         </article>
@@ -219,18 +230,18 @@
             <span class="sr-only">Ta conclusion</span>
             <textarea id="conclusionInput" rows="8" maxlength="1800" placeholder="En 3 à 5 phrases : quels points communs, quelles différences idéologiques, et pourquoi il ne faut pas confondre les deux régimes ?"></textarea>
           </label>
-          <p class="hint">Structure possible : 1) un point commun ; 2) une différence d'idéologie ; 3) une différence de cible ou d'économie ; 4) ce qu'il ne faut pas confondre.</p>
+          <p class="hint" id="conclusionHint">Structure possible : 1) un point commun ; 2) une différence d'idéologie ; 3) une différence de cible ou d'économie ; 4) ce qu'il ne faut pas confondre.</p>
           <p class="muted" id="conclusionCount">0 caractère</p>
         </article>
       </div>
 
       <div class="export-panel">
         <div>
-          <h3>Exporter ma carte en PDF</h3>
-          <p class="muted">Un aperçu s'ouvre avant l'impression. Dans la fenêtre d'impression, choisis « Enregistrer au format PDF ».</p>
+          <h3>Exporter mon dossier en PDF</h3>
+          <p class="muted">Un aperçu s'ouvre avant l'impression. Le PDF contient tes réponses aux questions, tes choix de mécanismes, ton tri, ta carte, ta conclusion et les sources. Dans la fenêtre d'impression, choisis « Enregistrer au format PDF ».</p>
         </div>
         <div class="export-actions">
-          <button type="button" class="button primary" id="previewButton">Exporter ma carte en PDF</button>
+          <button type="button" class="button primary" id="previewButton">Exporter mon dossier en PDF</button>
           <button type="button" class="button secondary" id="backupButton2">Télécharger une sauvegarde</button>
           <button type="button" class="button ghost" id="importButton">Importer une sauvegarde</button>
           <input type="file" id="importInput" accept="application/json,.json" hidden />
@@ -323,11 +334,11 @@
       <div class="modal-head">
         <div>
           <p class="kicker">Aperçu avant export</p>
-          <h2 id="previewTitle">Ta carte en PDF</h2>
+          <h2 id="previewTitle">Ton dossier en PDF</h2>
         </div>
         <button type="button" class="icon-button" data-close-dialog="previewDialog" aria-label="Fermer l'aperçu">×</button>
       </div>
-      <p class="muted">Vérifie la lisibilité. Le PDF contiendra la carte, le détail des nœuds avec leurs sources, ta conclusion et la bibliographie.</p>
+      <p class="muted">Vérifie la lisibilité. Le PDF contiendra tes réponses aux questions, tes choix de mécanismes, ton tri, ta carte, le détail des nœuds avec leurs sources, ta conclusion et la bibliographie.</p>
       <div class="preview-body" id="previewBody"></div>
       <div class="modal-actions sticky-actions">
         <button type="button" class="button primary" id="printButton">Imprimer / Enregistrer en PDF</button>

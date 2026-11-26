@@ -4,6 +4,8 @@ Application web pédagogique en français pour des élèves de troisième : comp
 
 **Site en ligne :** https://louskyfly.github.io/enquete-regimes-totalitaires/
 
+> **Version contrôle** : les indices, les synthèses de dossier et les corrections automatiques sont masqués. Les réponses de l'élève (questions, mécanismes, tri) sont exportées dans le PDF. Pour revenir à la version d'entraînement, passer `CONTROL_MODE` à `false` dans `content.js`.
+
 ## Ce que fait l'application
 
 Le parcours suit six étapes :
@@ -13,7 +15,9 @@ Le parcours suit six étapes :
 3. **Mécanismes** : neuf affirmations à attribuer à l'URSS, à l'Allemagne nazie ou aux deux.
 4. **Comparer** : quatorze éléments à trier entre « points communs », « URSS », « Allemagne nazie » et « à vérifier / à nuancer ».
 5. **Carte** : canevas déplaçable et zoomable, nœuds, liens, notes, sources, modèles, annuler/rétablir.
-6. **Vérifier** : checklist, conclusion comparative, aperçu et export PDF.
+6. **Vérifier** : critères de réussite, conclusion comparative, aperçu et export PDF.
+
+En version contrôle, les étapes 2 à 4 ne donnent ni piste, ni synthèse, ni correction immédiate. Les réponses sont enregistrées puis reprises dans l'export PDF.
 
 La progression est enregistrée automatiquement dans le navigateur (IndexedDB, avec repli sur `localStorage`). Aucun compte n'est nécessaire. Une sauvegarde JSON peut être téléchargée et réimportée.
 
@@ -27,6 +31,12 @@ La progression est enregistrée automatiquement dans le navigateur (IndexedDB, a
 | 4 | Deux mises en scène de la puissance | Alexandre Sumpf, « Duel architectural à l'Exposition universelle de Paris de 1937 », Histoire par l'image, 2019 |
 
 Les dossiers sont des **synthèses courtes**, pas des recueils de citations. Les textes du GHDI, en allemand et en anglais, sont reformulés en français. Les références complètes et les URL figurent dans l'application (panneau « Sources des quatre dossiers ») et dans l'export PDF.
+
+### Images fournies
+
+Trois montages fournis dans le dossier `studio` sont intégrés à l'étape d'enquête : deux portraits rapprochés et un montage en deux camps. Ils sont présentés comme des **documents à analyser**, avec une légende, la mention « source et droits à préciser » et un avertissement sur les symboles.
+
+Deux fichiers du dossier `studio` ne sont pas utilisés dans l'interface : `croix-gammees.gif` (croix gammée isolée) et `faucille et marteau.png` (symbole soviétique isolé). Un symbole isolé, sans document à analyser, relèverait d'une esthétique de propagande ou d'un symbole haineux décoratif, ce que la consigne visuelle exclut. Les symboles apparaissent uniquement dans les montages, avec un cadre critique.
 
 Le tableau de synthèse d'origine n'est pas reproduit dans le dépôt : il n'a pas été fourni dans la session de travail. Les quatre dossiers permettent de le vérifier et de corriger ses formulations trop simples (Hitler « élu », régimes « identiques », nazisme « socialiste », Staline au pouvoir « en 1924 »).
 
@@ -80,7 +90,7 @@ Le contenu historique est séparé de l'interface : pour corriger un texte, une 
 - **Sauvegarde automatique** : étape atteinte, réponses, tri, carte, réglages, conclusion.
 - **Reprise** : au retour, l'application propose de reprendre ou de recommencer.
 - **Sauvegarde de secours** : fichier JSON téléchargeable et réimportable.
-- **Export PDF** : aperçu, puis impression du navigateur avec « Enregistrer au format PDF ». Le document contient le titre, le nom de l'élève, la carte, le détail des nœuds avec leurs sources, la conclusion et la bibliographie.
+- **Export PDF** : aperçu, puis impression du navigateur avec « Enregistrer au format PDF ». Le document contient le titre, le nom de l'élève, **les réponses aux questions, les choix de mécanismes et le tri**, la carte, le détail des nœuds avec leurs sources, la conclusion et la bibliographie.
 
 Les données restent sur l'appareil. Elles peuvent être perdues si le navigateur ou les données du site sont effacés, ou si l'élève change d'appareil. Le cache local ne garantit pas une conservation permanente.
 
@@ -90,7 +100,7 @@ Les données restent sur l'appareil. Elles peuvent être perdues si le navigateu
 - **PDF via l'impression du navigateur** : le rendu dépend du navigateur (Chrome, Edge, Firefox). L'aperçu est là pour vérifier avant impression.
 - **Sources secondaires** : EHNE, Histoire par l'image et USHMM sont des analyses d'historiens ; les décrets et lois sont des textes primaires. L'application ne remplace pas un manuel ni une validation par l'enseignant.
 - **Langues** : les dossiers sont en français ; les textes originaux du GHDI sont en allemand et en anglais, et sont reformulés.
-- **Images** : aucune image d'archive n'est intégrée, pour des raisons de droits et pour éviter les images choquantes. Les documents sont accessibles par leurs pages d'origine.
+- **Images** : les trois montages fournis sont intégrés avec leur cadre critique. Aucune image d'archive supplémentaire n'est ajoutée. Les droits des images fournies ne sont pas vérifiés : elles sont publiées ici à la demande de l'enseignant et ne sont pas reproduites dans l'export PDF. Il faut vérifier leur provenance avant une diffusion publique large.
 - **Accessibilité** : navigation clavier, contrastes, catégories signalées par couleur + symbole + libellé, vue liste alternative au canevas. Le canevas spatial reste difficile à utiliser avec un lecteur d'écran ; la vue liste est prévue pour cela.
 
 ## Droits

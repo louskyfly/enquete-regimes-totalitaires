@@ -6,7 +6,9 @@ import {
   SORT_COLUMNS,
   SORT_ITEMS,
   GLOSSARY,
-  BIBLIOGRAPHY
+  BIBLIOGRAPHY,
+  CONTROL_MODE,
+  IMAGES
 } from "./content.js";
 import { CATEGORIES, initMap, setMapData, getMapData, applyTemplate, buildFromSort, toPrintSVG, undo, redo, zoomIn, zoomOut, fitView, addNode, startLink } from "./map.js";
 import { saveState, loadState, clearState } from "./storage.js";
@@ -178,6 +180,23 @@ function renderDossiers() {
   });
 }
 
+function renderImages() {
+  const gallery = $("#imageGallery");
+  if (!gallery) return;
+  gallery.innerHTML = IMAGES.map(
+    (img) => `<figure class="image-card">
+      <img src="${esc(img.src)}" alt="${esc(img.alt)}" loading="lazy" decoding="async" />
+      <figcaption>
+        <span class="image-nature">${esc(img.nature)}</span>
+        <strong>${esc(img.title)}</strong>
+        <p>${esc(img.caption)}</p>
+        <p class="image-credit">${esc(img.credit)}</p>
+        <p class="image-caution">${esc(img.caution)}</p>
+      </figcaption>
+    </figure>`
+  ).join("");
+}
+
 function openDossier(id) {
   const dossier = DOSSIERS.find((d) => d.id === id);
   if (!dossier) return;
@@ -207,11 +226,15 @@ function openDossier(id) {
 
   const questions = dossier.questions
     .map(
-      (q) => `<div class="question" data-question="${esc(q.id)}">
-        <label for="answer-${esc(q.id)}">${esc(q.prompt)}</label>
+      (q, index) => `<div class="question" data-question="${esc(q.id)}">
+        <label for="answer-${esc(q.id)}"><span class="question-number">Question ${index + 1}</span> ${esc(q.prompt)}</label>
         <textarea id="answer-${esc(q.id)}" data-qid="${esc(q.id)}" rows="3" maxlength="700" placeholder="${esc(q.placeholder || "Note ce que tu observes...")}">${esc(answers[q.id] || "")}</textarea>
-        <button type="button" class="text-button" data-hint="${esc(q.id)}" aria-expanded="false" aria-controls="hint-${esc(q.id)}">Voir une piste</button>
-        <p class="hint" id="hint-${esc(q.id)}" hidden>${esc(q.hint)}</p>
+        ${
+          CONTROL_MODE
+            ? ""
+            : `<button type="button" class="text-button" data-hint="${esc(q.id)}" aria-expanded="false" aria-controls="hint-${esc(q.id)}">Voir une piste</button>
+               <p class="hint" id="hint-${esc(q.id)}" hidden>${esc(q.hint)}</p>`
+        }
       </div>`
     )
     .join("");
@@ -228,14 +251,18 @@ function openDossier(id) {
         : ""
     }
     <div class="doc-texts">${texts}</div>
-    <div class="takeaway-block">
-      <button type="button" class="button secondary small" data-takeaway aria-expanded="false" aria-controls="takeaway-${esc(dossier.id)}">Afficher la synthèse du dossier</button>
-      <div id="takeaway-${esc(dossier.id)}" class="takeaway" hidden>
-        <p>${esc(dossier.takeaway)}</p>
-      </div>
-    </div>
-    <h3 class="questions-title">Observe et note</h3>
-    <p class="muted">Réponds avec tes mots. Une piste n'est pas la réponse : elle indique où chercher.</p>
+    ${
+      CONTROL_MODE
+        ? ""
+        : `<div class="takeaway-block">
+            <button type="button" class="button secondary small" data-takeaway aria-expanded="false" aria-controls="takeaway-${esc(dossier.id)}">Afficher la synthèse du dossier</button>
+            <div id="takeaway-${esc(dossier.id)}" class="takeaway" hidden>
+              <p>${esc(dossier.takeaway)}</p>
+            </div>
+          </div>`
+    }
+    <h3 class="questions-title">Réponds aux questions</h3>
+    <p class="muted">${CONTROL_MODE ? "Réponds avec tes mots, sans aide." : "Réponds avec tes mots. Une piste n'est pas la réponse : elle indique où chercher."}</p>
     <div class="questions">${questions}</div>
     <label class="done-check">
       <input type="checkbox" id="dossierDone" ${done ? "checked" : ""} />
@@ -326,15 +353,19 @@ function renderMechanisms() {
           )
           .join("")}
       </div>
-      <div class="mechanism-footer">
-        <button type="button" class="button secondary small" data-check="${esc(m.id)}">Vérifier</button>
-        <div class="feedback ${checked ? (correct ? "is-correct" : "is-wrong") : ""}" ${checked ? "" : "hidden"}>
-          <p><strong>${correct ? "Cela correspond." : "À revoir."}</strong> ${esc(m.feedback)}</p>
-          <p class="muted">Réponse attendue : ${esc(
-            m.answer === "both" ? "les deux régimes" : m.answer === "urss" ? "l'URSS de Staline" : "l'Allemagne nazie"
-          )}</p>
-        </div>
-      </div>
+      ${
+        CONTROL_MODE
+          ? ""
+          : `<div class="mechanism-footer">
+              <button type="button" class="button secondary small" data-check="${esc(m.id)}">Vérifier</button>
+              <div class="feedback ${checked ? (correct ? "is-correct" : "is-wrong") : ""}" ${checked ? "" : "hidden"}>
+                <p><strong>${correct ? "Cela correspond." : "À revoir."}</strong> ${esc(m.feedback)}</p>
+                <p class="muted">Réponse attendue : ${esc(
+                  m.answer === "both" ? "les deux régimes" : m.answer === "urss" ? "l'URSS de Staline" : "l'Allemagne nazie"
+                )}</p>
+              </div>
+            </div>`
+      }
     </article>`;
   }).join("");
 }
@@ -416,7 +447,7 @@ function renderSort() {
           items.length
             ? items
                 .map((item) => {
-                  const checked = state.sortChecked;
+                  const checked = !CONTROL_MODE && state.sortChecked;
                   const correct = checked && state.sort[item.id] === item.answer;
                   const wrong = checked && state.sort[item.id] !== item.answer;
                   return `<div class="sort-item is-placed ${selectedSortItem === item.id ? "is-selected" : ""} ${correct ? "is-correct" : ""} ${wrong ? "is-wrong" : ""}" draggable="true" data-sort-id="${esc(item.id)}">
@@ -447,6 +478,10 @@ function renderSort() {
 function renderSortFeedback() {
   const panel = $("#sortFeedback");
   if (!panel) return;
+  if (CONTROL_MODE) {
+    panel.innerHTML = "";
+    return;
+  }
   if (!state.sortChecked) {
     panel.innerHTML = "";
     return;
@@ -578,6 +613,7 @@ function bindSort() {
   });
 
   $("#sortCheck").addEventListener("click", () => {
+    if (CONTROL_MODE) return;
     state.sortChecked = true;
     scheduleSave();
     renderSort();
@@ -630,20 +666,24 @@ function renderChecklist() {
   const manual = state.checklistManual.nuance;
   list.innerHTML =
     items
-      .map(
-        (item) =>
-          `<li class="${item.ok ? "is-ok" : "is-todo"}" data-check-id="${esc(item.id)}">
+      .map((item) => {
+        const tip = CONTROL_MODE ? "" : item.tip;
+        return `<li class="${item.ok ? "is-ok" : "is-todo"}" data-check-id="${esc(item.id)}">
             <span class="check-icon" aria-hidden="true">${item.ok ? "✓" : "○"}</span>
-            <span class="check-body"><strong>${esc(item.label)}</strong><span class="check-tip">${item.ok ? "" : esc(item.tip)}</span></span>
+            <span class="check-body"><strong>${esc(item.label)}</strong>${tip && !item.ok ? `<span class="check-tip">${esc(tip)}</span>` : ""}</span>
             ${
               item.id === "nuance"
                 ? `<input type="checkbox" id="manualNuance" ${manual ? "checked" : ""} aria-label="J'ai relu les éléments à vérifier ou à nuancer" />`
                 : ""
             }
-          </li>`
-      )
+          </li>`;
+      })
       .join("") +
-    `<li class="check-summary">${okCount === items.length ? "Tous les points sont réunis. Relis une dernière fois avant l'export." : `${okCount} point(s) sur ${items.length} réuni(s). Continue, puis reviens vérifier.`}</li>`;
+    `<li class="check-summary">${
+      okCount === items.length
+        ? "Tous les critères sont remplis. Relis une dernière fois avant l'export."
+        : `${okCount} critère(s) sur ${items.length} rempli(s).`
+    }</li>`;
 }
 
 function updateChecklist() {
@@ -818,11 +858,58 @@ function renderSources() {
     .join("");
 }
 
+function answerText(value) {
+  const text = String(value || "").trim();
+  return text ? esc(text).replace(/\n/g, "<br>") : '<span class="print-empty">Non répondu.</span>';
+}
+
+function buildAnswersHTML() {
+  return DOSSIERS.map((d) => {
+    const answers = (state.dossiers[d.id] && state.dossiers[d.id].answers) || {};
+    return `<section class="print-answers-group">
+      <h3>Dossier ${d.number} — ${esc(d.title)} <span>· ${esc(d.regime)}</span></h3>
+      <ol>
+        ${d.questions
+          .map(
+            (q) => `<li>
+              <p class="print-question">${esc(q.prompt)}</p>
+              <p class="print-answer">${answerText(answers[q.id])}</p>
+            </li>`
+          )
+          .join("")}
+      </ol>
+    </section>`;
+  }).join("");
+}
+
+function buildMechanismsHTML() {
+  const labels = { urss: "URSS de Staline", allemagne: "Allemagne nazie", both: "Les deux" };
+  return `<ol class="print-choice-list">
+    ${MECHANISMS.map((m) => {
+      const choice = (state.mechanisms[m.id] && state.mechanisms[m.id].choice) || "";
+      return `<li><span class="print-choice-q">${esc(m.label)}</span><span class="print-choice-a">${esc(labels[choice] || "Non répondu")}</span></li>`;
+    }).join("")}
+  </ol>`;
+}
+
+function buildSortHTML() {
+  return `<ol class="print-choice-list">
+    ${SORT_ITEMS.map((item) => {
+      const column = state.sort[item.id];
+      const label = column ? SORT_COLUMNS.find((c) => c.id === column)?.label || column : "Non placé";
+      return `<li><span class="print-choice-q">${esc(item.text)}</span><span class="print-choice-a">${esc(label)}</span></li>`;
+    }).join("")}
+  </ol>`;
+}
+
 function buildPrintDoc() {
   const nodes = (state.map && state.map.nodes) || [];
   const name = state.studentName.trim() || "Élève";
   const date = new Date().toLocaleDateString("fr-FR");
   const svg = nodes.length ? toPrintSVG() : "";
+  const answersHtml = buildAnswersHTML();
+  const mechanismsHtml = buildMechanismsHTML();
+  const sortHtml = buildSortHTML();
   const groups = ["central", "commun", "urss", "allemagne", "preuve", "nuance"]
     .map((catId) => {
       const list = nodes.filter((n) => n.category === catId);
@@ -865,12 +952,23 @@ function buildPrintDoc() {
 
   return `<div class="print-doc">
     <header class="print-head">
-      <p class="print-kicker">Enquête historique · ${esc(META.level)}</p>
-      <h1>Carte mentale : l'URSS de Staline et l'Allemagne nazie</h1>
+      <p class="print-kicker">Contrôle d'histoire · ${esc(META.level)}</p>
+      <h1>Dossier de contrôle : l'URSS de Staline et l'Allemagne nazie</h1>
       <p class="print-meta">Élève : <strong>${esc(name)}</strong> · Date : ${esc(date)}</p>
     </header>
 
-    <section class="print-section">
+    <section class="print-section print-answers-section">
+      <h2>Réponses de l'élève</h2>
+      <p class="print-note">Réponses saisies dans l'application, reproduites sans correction automatique.</p>
+      <h3 class="print-subtitle">Questions d'enquête</h3>
+      ${answersHtml}
+      <h3 class="print-subtitle">Mécanismes</h3>
+      ${mechanismsHtml}
+      <h3 class="print-subtitle">Tri comparatif</h3>
+      ${sortHtml}
+    </section>
+
+    <section class="print-section print-map-section">
       <div class="print-section-head">
         <h2>La carte</h2>
         <div class="print-legend">${legend}</div>
@@ -879,7 +977,7 @@ function buildPrintDoc() {
       <p class="print-note">Les sources de chaque nœud sont détaillées ci-dessous. La couleur est doublée d'un symbole et d'un libellé.</p>
     </section>
 
-    <section class="print-section">
+    <section class="print-section print-detail-section">
       <h2>Détail des nœuds et des sources</h2>
       ${groups || `<p class="print-empty">Aucun nœud renseigné.</p>`}
     </section>
@@ -896,7 +994,7 @@ function buildPrintDoc() {
     </section>
 
     <footer class="print-footer">
-      <p>Travail réalisé dans le cadre d'une enquête historique — ${esc(date)}. Les sources sont citées.</p>
+      <p>Dossier de contrôle réalisé le ${esc(date)}. Les réponses de l'élève sont reproduites telles quelles ; les sources sont citées.</p>
     </footer>
   </div>`;
 }
@@ -918,7 +1016,7 @@ function printCurrent() {
   const dialog = $("#previewDialog");
   const wasOpen = Boolean(dialog && dialog.open);
   if (wasOpen) dialog.close();
-  document.title = `Carte mentale URSS-Allemagne — ${name} — ${date}`;
+  document.title = `Dossier de controle URSS-Allemagne — ${name} — ${date}`;
   state.exportedAt = new Date().toISOString();
   saveNow();
   window.print();
@@ -983,6 +1081,7 @@ function renderAll() {
   if (nameInput && document.activeElement !== nameInput) nameInput.value = state.studentName || "";
   renderBriefing();
   renderDossiers();
+  renderImages();
   renderMechanisms();
   renderSort();
   bindConclusion();
@@ -1047,6 +1146,13 @@ function bindStatic() {
   bindSort();
   bindChecklist();
   bindMapToolbar();
+
+  if (CONTROL_MODE) {
+    const sortCheck = $("#sortCheck");
+    if (sortCheck) sortCheck.hidden = true;
+    const conclusionHint = $("#conclusionHint");
+    if (conclusionHint) conclusionHint.hidden = true;
+  }
 
   document.addEventListener("keydown", (event) => {
     if (state.step === 3 && selectedSortItem && !isTyping()) {
