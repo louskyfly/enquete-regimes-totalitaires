@@ -31,9 +31,9 @@ En haut à droite, le binôme renseigne sa classe et les prénoms/noms de **deux
 Aucun serveur, aucun compte. La remise passe par un **lien de correction** que le binôme copie et transmet (ENT, messagerie, QR code).
 
 1. Dans l'étape 6, le binôme clique sur **Envoyer au professeur** une fois le dossier complet.
-2. Une fenêtre affiche un **lien** contenant toute la copie (compressée et encodée dans l'adresse) et un **code** de secours, plus un fichier JSON téléchargeable. Le lien fait environ 2 000 caractères : c'est prévu pour être copié-collé, pas pour être retapé.
-3. Le professeur ouvre le lien, ou colle le lien/le code dans l'onglet **Correction**.
-4. La copie s'affiche : réponses du binôme, **barème** à côté de chaque question, **case de points** et **correction rédigée** sous chaque question.
+2. Une fenêtre affiche un **lien** contenant toute la copie (compressée et encodée dans l'adresse), un **code de secours** replié et un fichier JSON téléchargeable. Le lien fait environ 1 500 caractères : c'est prévu pour être copié-collé, pas pour être retapé.
+3. Le professeur ouvre le lien, ou colle le lien/le code dans l'onglet **Correction**, ou y ouvre le fichier JSON.
+4. La copie s'affiche : réponses du binôme, **barème** à côté de chaque question, **case de points** et **correction rédigée** sous chaque question. La carte mentale se clique pour s'ouvrir en grand.
 5. Les points sont enregistrés automatiquement sur l'appareil du professeur ; le total sur 20 se met à jour en direct.
 6. **Exporter les notes** produit un fichier CSV (classe, binôme, points par item, total) ouvrable dans un tableur.
 
