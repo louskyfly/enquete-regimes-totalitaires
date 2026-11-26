@@ -271,30 +271,35 @@
       <div class="step-head compact">
         <p class="kicker">Espace professeur</p>
         <h2 id="step6-title" tabindex="-1">Correction</h2>
-        <p class="lead">Colle le lien ou le code envoyé par un binôme. Les copies ouvertes et les notes restent sur cet appareil.</p>
+        <p class="lead">Ouvre une session : les copies des binômes arrivent ici pendant la séance. Le lien ou le fichier restent possibles en secours.</p>
       </div>
 
-      <div class="correction-toolbar">
-        <label class="field">
-          <span>Lien ou code de correction</span>
-          <textarea id="correctionCodeInput" rows="3" placeholder="Colle ici le lien reçu du binôme..."></textarea>
-        </label>
-        <div class="toolbar-actions">
-          <button type="button" class="button primary" id="openCorrectionButton">Ouvrir la copie</button>
-          <button type="button" class="button secondary" id="exportGradesButton">Exporter les notes</button>
-          <label class="button ghost small file-button" for="correctionFileInput">
-            Ouvrir un fichier .json
-            <input type="file" id="correctionFileInput" accept="application/json,.json" hidden />
+      <div class="session-card" id="sessionPanel"></div>
+
+      <details class="manual-toolbar">
+        <summary>Ouvrir une copie reçue par lien ou par fichier</summary>
+        <div class="correction-toolbar">
+          <label class="field">
+            <span>Lien ou code de correction</span>
+            <textarea id="correctionCodeInput" rows="3" placeholder="Colle ici le lien reçu du binôme..."></textarea>
           </label>
+          <div class="toolbar-actions">
+            <button type="button" class="button primary" id="openCorrectionButton">Ouvrir la copie</button>
+            <button type="button" class="button secondary" id="exportGradesButton">Exporter les notes</button>
+            <label class="button ghost small file-button" for="correctionFileInput">
+              Ouvrir un fichier .json
+              <input type="file" id="correctionFileInput" accept="application/json,.json" hidden />
+            </label>
+          </div>
+          <p class="hint" id="correctionMessage" role="status" aria-live="polite"></p>
         </div>
-        <p class="hint" id="correctionMessage" role="status" aria-live="polite"></p>
-      </div>
+      </details>
 
       <div class="correction-layout">
         <aside class="correction-list-panel">
           <h3>Copies reçues</h3>
           <div id="correctionList" class="correction-list"></div>
-          <p class="hint">Les copies et les notes sont stockées dans ce navigateur. Pense à exporter les notes.</p>
+          <p class="hint">Les copies reçues et tes notes restent sur cet appareil. Pense à exporter les notes.</p>
         </aside>
         <div id="correctionView" class="correction-view" aria-live="polite"></div>
       </div>
@@ -393,27 +398,31 @@
       <div class="modal-head">
         <div>
           <p class="kicker">Envoi au professeur</p>
-          <h2 id="sendTitle">Lien de correction</h2>
+          <h2 id="sendTitle">Envoyer la copie</h2>
         </div>
         <button type="button" class="icon-button" data-close-dialog="sendDialog" aria-label="Fermer l'envoi">×</button>
       </div>
-      <p>Copie ce lien et envoie-le au professeur. Il contient les réponses du binôme : ne le partage pas avec d'autres élèves.</p>
-      <label class="field">
-        <span>Lien de correction</span>
-        <textarea id="sendLink" rows="5" readonly></textarea>
-      </label>
-      <div class="modal-actions">
-        <button type="button" class="button primary" id="copySendLink">Copier le lien</button>
-        <button type="button" class="button secondary" id="downloadCopy">Télécharger la copie (.json)</button>
-      </div>
-      <p class="hint">Si la messagerie coupe le lien, envoie plutôt le fichier .json : le professeur l'ouvre dans l'onglet Correction avec « Ouvrir un fichier .json ».</p>
-      <details class="send-fallback">
-        <summary>Code de secours</summary>
+      <div id="sendSyncBlock"></div>
+      <details class="send-fallback" id="sendOtherWays">
+        <summary>Autre moyen : lien de correction ou fichier</summary>
+        <p>Copie ce lien et envoie-le au professeur. Il contient les réponses du binôme : ne le partage pas avec d'autres élèves.</p>
         <label class="field">
-          <span>Code de correction</span>
-          <textarea id="sendCode" rows="4" readonly></textarea>
+          <span>Lien de correction</span>
+          <textarea id="sendLink" rows="4" readonly></textarea>
         </label>
-        <button type="button" class="button ghost small" id="copySendCode">Copier le code</button>
+        <div class="modal-actions">
+          <button type="button" class="button primary" id="copySendLink">Copier le lien</button>
+          <button type="button" class="button secondary" id="downloadCopy">Télécharger la copie (.json)</button>
+        </div>
+        <p class="hint">Si la messagerie coupe le lien, envoie plutôt le fichier .json : le professeur l'ouvre dans l'onglet Correction avec « Ouvrir un fichier .json ».</p>
+        <details class="send-fallback">
+          <summary>Code de secours</summary>
+          <label class="field">
+            <span>Code de correction</span>
+            <textarea id="sendCode" rows="4" readonly></textarea>
+          </label>
+          <button type="button" class="button ghost small" id="copySendCode">Copier le code</button>
+        </details>
       </details>
     </div>
   </dialog>

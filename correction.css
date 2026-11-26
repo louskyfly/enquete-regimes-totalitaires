@@ -47,6 +47,156 @@
     cursor: pointer;
   }
 
+  /* ---------- Session de classe ---------- */
+
+  .session-card {
+    background: #fbf4e4;
+    border: 1px solid #b9a17f;
+    border-left: 4px solid #7d2f2f;
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 5px 14px rgba(60, 42, 24, 0.08);
+  }
+
+  .session-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .session-intro h3 {
+    margin: 0 0 4px;
+    font-size: 1.15rem;
+  }
+
+  .session-intro p {
+    margin: 0;
+    font-size: 0.86rem;
+    color: #5f4a30;
+    max-width: 62ch;
+  }
+
+  .session-join {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed #c9b18e;
+    flex-wrap: wrap;
+  }
+
+  .session-join .field {
+    margin: 0;
+    flex: 1 1 240px;
+  }
+
+  .session-join input {
+    font-family: "Courier New", ui-monospace, monospace;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    max-width: 220px;
+  }
+
+  .session-live {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+  }
+
+  .session-code-block {
+    background: #7d2f2f;
+    color: #fff7e8;
+    border-radius: 4px;
+    padding: 8px 16px 10px;
+    min-width: 190px;
+  }
+
+  .session-code-block .kicker {
+    margin: 0 0 2px;
+    color: #f3d9b0;
+    font-size: 0.6rem;
+  }
+
+  .session-code {
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    margin: 0;
+    line-height: 1.1;
+  }
+
+  .session-live-info {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+
+  .session-status {
+    margin: 0 0 8px;
+    font-family: "Courier New", monospace;
+    font-size: 0.76rem;
+    color: #31502c;
+  }
+
+  .session-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .manual-toolbar > summary {
+    cursor: pointer;
+    font-family: "Courier New", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6f5b40;
+    padding: 6px 0;
+  }
+
+  .manual-toolbar .correction-toolbar {
+    margin-top: 6px;
+  }
+
+  /* ---------- Bloc d'envoi côté élève ---------- */
+
+  .send-class {
+    background: #fdf3dc;
+    border: 1px solid #d8bf95;
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+
+  .send-class .kicker {
+    margin: 0;
+  }
+
+  .send-class-code {
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: #7d2f2f;
+    margin: 2px 0 12px;
+  }
+
+  .send-class input {
+    font-family: "Courier New", ui-monospace, monospace;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    max-width: 220px;
+  }
+
+  .send-class .button {
+    margin-bottom: 6px;
+  }
+
   .send-fallback {
     margin-top: 12px;
     border-top: 1px dashed #c9b18e;

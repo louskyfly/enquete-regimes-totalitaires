@@ -12,6 +12,17 @@ import {
 } from "./content.js";
 import { CATEGORIES, initMap, setMapData, buildFromSort, toSVG, toSVGFromData, undo, redo, zoomIn, zoomOut, fitView, addNode, startLink } from "./map.js";
 import { saveState, loadState, clearState } from "./storage.js";
+import {
+  isSyncEnabled,
+  normalizeCode,
+  isValidCode,
+  randomCode,
+  createSession,
+  openSession,
+  publishCopy,
+  fetchCopies,
+  watchCopies
+} from "./sync.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -65,6 +76,8 @@ function defaultState() {
       members: [emptyMember(), emptyMember()]
     },
     step: 0,
+    submissionId: "",
+    sentAt: "",
     dossiers: {},
     mechanisms: {},
     sort: {},
@@ -82,6 +95,8 @@ function normalizeState(raw) {
   const merged = { ...base, ...raw };
   merged.version = 1;
   merged.step = clamp(Number(merged.step) || 0, 0, 6);
+  merged.submissionId = String(merged.submissionId || "");
+  merged.sentAt = String(merged.sentAt || "");
   merged.studentName = String(merged.studentName || "");
   merged.conclusion = String(merged.conclusion || "");
   if (raw.group && Array.isArray(raw.group.members)) {
@@ -1070,7 +1085,10 @@ function renderStep() {
   if (bar) bar.style.width = `${((state.step + 1) / STEP_LABELS.length) * 100}%`;
   updateMapEmpty();
   if (state.step === 5) updateChecklist();
-  if (state.step === 6) renderCorrectionPage();
+  if (state.step === 6) {
+    renderCorrectionPage();
+    if (teacherSession && !teacherWatch) startTeacherWatch();
+  }
 }
 
 function goToStep(step, focus = true) {
@@ -1379,8 +1397,39 @@ function backup() {
 }
 
 const CORRECTIONS_KEY = "enquete-corrections-v1";
+const CLASS_CODE_KEY = "enquete-classe-code-v1";
+const TEACHER_SESSION_KEY = "enquete-session-prof-v1";
 let currentCorrectionId = null;
 let pendingSubmission = null;
+let classCode = "";
+let teacherSession = "";
+let teacherWatch = null;
+let currentRenderedAt = "";
+let lastSessionStatus = "";
+
+function readStoredValue(key) {
+  try {
+    return localStorage.getItem(key) || "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function writeStoredValue(key, value) {
+  try {
+    if (value) localStorage.setItem(key, value);
+    else localStorage.removeItem(key);
+  } catch (_) {
+    /* stockage indisponible : la session reste valable pour la page ouverte */
+  }
+}
+
+function studentLink(code) {
+  const url = new URL(window.location.href);
+  url.search = "?classe=" + encodeURIComponent(code);
+  url.hash = "";
+  return url.toString();
+}
 
 function formatPoints(value) {
   return Number(value).toLocaleString("fr-FR", { maximumFractionDigits: 2 });
@@ -1574,9 +1623,13 @@ function extractCopyCode(input) {
 }
 
 function buildSubmission() {
+  if (!state.submissionId) {
+    state.submissionId = `copie-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    saveNow();
+  }
   return {
     version: 1,
-    id: `copie-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: state.submissionId,
     group: JSON.parse(JSON.stringify(state.group)),
     dossiers: JSON.parse(JSON.stringify(state.dossiers)),
     mechanisms: JSON.parse(JSON.stringify(state.mechanisms)),
@@ -1625,7 +1678,7 @@ function renderCorrectionList() {
     (a, b) => new Date(b.submission.submittedAt).getTime() - new Date(a.submission.submittedAt).getTime()
   );
   if (!entries.length) {
-    list.innerHTML = `<p class="muted">Aucune copie pour l'instant. Ouvre un lien reçu pour commencer.</p>`;
+    list.innerHTML = `<p class="muted">Aucune copie pour l'instant. Ouvre une session : les envois arriveront ici.</p>`;
     return;
   }
   list.innerHTML = entries
@@ -1649,13 +1702,14 @@ function renderCorrectionList() {
 function renderCorrectionView() {
   const view = $("#correctionView");
   if (!view) return;
+  currentRenderedAt = "";
   const corrections = loadCorrections();
   const entry = currentCorrectionId ? corrections[currentCorrectionId] : null;
   if (!entry) {
     view.innerHTML = `<div class="correction-empty">
       <h3>Comment corriger ?</h3>
-      <p>Le binôme t'envoie un lien. Ouvre-le ou colle-le dans le champ ci-dessus. La copie apparaît ici avec les réponses, le barème, ta case de points et la correction.</p>
-      <p class="muted">Les copies et les notes sont enregistrées dans ce navigateur, sur cet appareil uniquement.</p>
+      <p>Ouvre une session de classe : chaque binôme envoie sa copie depuis l'étape 6, et elle apparaît ici avec ses réponses, le barème, ta case de points et la correction.</p>
+      <p class="muted">Sans session, tu peux aussi ouvrir un lien reçu ou un fichier .json. Les notes sont enregistrées dans ce navigateur.</p>
     </div>`;
     return;
   }
@@ -1769,9 +1823,11 @@ function renderCorrectionView() {
       <button type="button" class="button secondary small" id="saveCorrectionButton">Enregistrer la correction</button>
     </div>
   </div>`;
+  currentRenderedAt = entry.submission.submittedAt || "";
 }
 
 function renderCorrectionPage() {
+  renderSessionPanel();
   renderCorrectionList();
   renderCorrectionView();
 }
@@ -1786,7 +1842,8 @@ function openMapZoom(source) {
   dialog.showModal();
 }
 
-function ingestSubmission(submission) {
+function ingestSubmission(submission, options = {}) {
+  const { open = true } = options;
   const corrections = loadCorrections();
   if (!submission.id) submission.id = `copie-${Date.now()}`;
   const existing = corrections[submission.id];
@@ -1796,12 +1853,50 @@ function ingestSubmission(submission) {
     updatedAt: Date.now()
   };
   saveCorrections(corrections);
+  if (!open) {
+    renderCorrectionList();
+    return;
+  }
   currentCorrectionId = submission.id;
   goToStep(6, false);
   renderCorrectionPage();
   const url = new URL(window.location.href);
   url.search = "";
   window.history.replaceState({}, "", url.toString());
+}
+
+/** Fusionne les copies reçues de la session sans interrompre la saisie en cours. */
+function mergeIncomingCopies(payloads) {
+  const corrections = loadCorrections();
+  let added = 0;
+  let changed = false;
+  for (const payload of payloads) {
+    let submission;
+    try {
+      submission = expandSubmission(payload);
+    } catch (_) {
+      continue;
+    }
+    if (!submission || !submission.id) continue;
+    const existing = corrections[submission.id];
+    if (!existing) {
+      added += 1;
+      changed = true;
+    } else if (existing.submission?.submittedAt !== submission.submittedAt) {
+      changed = true;
+    }
+    corrections[submission.id] = {
+      submission,
+      grades: existing?.grades || {},
+      updatedAt: existing ? existing.updatedAt : Date.now()
+    };
+  }
+  if (!changed) return 0;
+  saveCorrections(corrections);
+  const openEntry = currentCorrectionId ? corrections[currentCorrectionId] : null;
+  if (openEntry && openEntry.submission.submittedAt !== currentRenderedAt) renderCorrectionView();
+  else renderCorrectionList();
+  return added;
 }
 
 async function openCorrectionFromCode(input) {
@@ -1845,6 +1940,9 @@ async function openSendDialog() {
     toast("Complète d'abord le dossier avant de l'envoyer.");
     return;
   }
+  renderSendBlock();
+  const others = $("#sendOtherWays");
+  if (others) others.hidden = false;
   try {
     const submission = buildSubmission();
     const code = await encodeCopy(submission);
@@ -1857,6 +1955,313 @@ async function openSendDialog() {
     $("#sendDialog").showModal();
   } catch (_) {
     toast("Impossible de préparer le lien de correction.");
+  }
+}
+
+/* ---------------- Session de classe (envoi direct) ---------------- */
+
+function sessionStatusText(state, detail = "") {
+  if (state === "connecting") return "Connexion à la base…";
+  if (state === "live") return "En attente des copies…";
+  if (state === "reconnect") return "Connexion interrompue, nouvelle tentative…";
+  if (state === "offline") return "Base injoignable : vérifie la connexion.";
+  return detail || "";
+}
+
+function updateSessionStatus(text) {
+  const el = $("#sessionStatus");
+  if (el) el.textContent = text;
+}
+
+function stopTeacherWatch() {
+  if (teacherWatch) {
+    teacherWatch.close();
+    teacherWatch = null;
+  }
+}
+
+function startTeacherWatch() {
+  if (!isSyncEnabled() || !teacherSession) return;
+  stopTeacherWatch();
+  lastSessionStatus = "";
+  let sessionCount = 0;
+  const status = $("#sessionStatus");
+  if (status) status.textContent = "Connexion…";
+  teacherWatch = watchCopies(teacherSession, {
+    onData: (copies, info) => {
+      const payloads = Object.values(copies).filter(Boolean);
+      const added = mergeIncomingCopies(payloads);
+      sessionCount = payloads.length;
+      updateSessionStatus(
+        sessionCount
+          ? `${sessionCount} copie${sessionCount > 1 ? "s" : ""} reçue${sessionCount > 1 ? "s" : ""} dans cette session.`
+          : "Session ouverte. Les copies apparaîtront ici dès l'envoi."
+      );
+      if (added && info && info.source === "stream") {
+        toast(added > 1 ? `${added} nouvelles copies reçues.` : "Nouvelle copie reçue.");
+      }
+    },
+    onStatus: (state, detail) => {
+      lastSessionStatus = state;
+      if (state === "live") {
+        updateSessionStatus(
+          sessionCount
+            ? `${sessionCount} copie${sessionCount > 1 ? "s" : ""} reçue${sessionCount > 1 ? "s" : ""} dans cette session.`
+            : "Session ouverte. Les copies apparaîtront ici dès l'envoi."
+        );
+      } else {
+        updateSessionStatus(sessionStatusText(state, detail));
+      }
+    }
+  });
+}
+
+function bindSessionPanel() {
+  const mount = $("#sessionPanel");
+  if (!mount) return;
+
+  const create = $("#createSessionButton");
+  if (create) {
+    create.addEventListener("click", async () => {
+      create.disabled = true;
+      create.textContent = "Création…";
+      try {
+        let code = randomCode();
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          try {
+            await createSession(code);
+            break;
+          } catch (error) {
+            if (error && error.code === "exists") {
+              code = randomCode();
+              continue;
+            }
+            throw error;
+          }
+        }
+        teacherSession = code;
+        writeStoredValue(TEACHER_SESSION_KEY, teacherSession);
+        renderSessionPanel();
+        startTeacherWatch();
+        toast("Session ouverte : les copies arrivent ici.");
+      } catch (_) {
+        create.disabled = false;
+        create.textContent = "Créer une session";
+        toast("Création impossible. Vérifie la connexion.");
+      }
+    });
+  }
+
+  const join = $("#sessionJoinButton");
+  const joinInput = $("#sessionJoinInput");
+  if (join && joinInput) {
+    const submit = async () => {
+      const code = normalizeCode(joinInput.value);
+      if (!isValidCode(code)) {
+        toast("Le code doit ressembler à XXXX-XXXX.");
+        return;
+      }
+      join.disabled = true;
+      join.textContent = "Connexion…";
+      try {
+        const meta = await openSession(code);
+        if (!meta) {
+          toast("Aucune session ne porte ce code.");
+          join.disabled = false;
+          join.textContent = "Rejoindre";
+          return;
+        }
+        teacherSession = code;
+        writeStoredValue(TEACHER_SESSION_KEY, teacherSession);
+        renderSessionPanel();
+        startTeacherWatch();
+        toast("Session rejointe.");
+      } catch (_) {
+        join.disabled = false;
+        join.textContent = "Rejoindre";
+        toast("Connexion impossible. Vérifie le réseau.");
+      }
+    };
+    join.addEventListener("click", submit);
+    joinInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        void submit();
+      }
+    });
+  }
+
+  const copyLink = $("#copySessionLink");
+  if (copyLink) {
+    copyLink.addEventListener("click", async () => {
+      const ok = await copyTextToClipboard(studentLink(teacherSession));
+      toast(ok ? "Lien des élèves copié." : "Copie impossible : sélectionne le code à la main.");
+    });
+  }
+
+  const leave = $("#leaveSessionButton");
+  if (leave) {
+    leave.addEventListener("click", () => {
+      if (!window.confirm("Quitter la session ? Les copies déjà reçues restent sur cet appareil.")) return;
+      stopTeacherWatch();
+      teacherSession = "";
+      writeStoredValue(TEACHER_SESSION_KEY, "");
+      renderSessionPanel();
+      toast("Session quittée.");
+    });
+  }
+}
+
+function renderSessionPanel() {
+  const mount = $("#sessionPanel");
+  if (!mount) return;
+  if (!isSyncEnabled()) {
+    mount.hidden = true;
+    mount.innerHTML = "";
+    return;
+  }
+  mount.hidden = false;
+  if (mount.dataset.session === (teacherSession || "none") && mount.innerHTML.trim()) return;
+  mount.dataset.session = teacherSession || "none";
+  if (!teacherSession) {
+    mount.innerHTML = `
+      <div class="session-row">
+        <div class="session-intro">
+          <h3>Session de classe</h3>
+          <p>Ouvre une session : les copies des binômes arrivent ici automatiquement, sans lien à te transmettre.</p>
+        </div>
+        <button type="button" class="button primary" id="createSessionButton">Créer une session</button>
+      </div>
+      <div class="session-join">
+        <label class="field">
+          <span>Rejoindre une session déjà ouverte</span>
+          <input id="sessionJoinInput" placeholder="XXXX-XXXX" maxlength="9" autocomplete="off" spellcheck="false" />
+        </label>
+        <button type="button" class="button secondary" id="sessionJoinButton">Rejoindre</button>
+      </div>`;
+  } else {
+    mount.innerHTML = `
+      <div class="session-live">
+        <div class="session-code-block">
+          <p class="kicker">Code de la classe</p>
+          <p class="session-code">${esc(teacherSession)}</p>
+        </div>
+        <div class="session-live-info">
+          <p class="session-status" id="sessionStatus" role="status" aria-live="polite">Connexion…</p>
+          <div class="session-actions">
+            <button type="button" class="button secondary small" id="copySessionLink">Copier le lien des élèves</button>
+            <button type="button" class="button ghost small" id="leaveSessionButton">Quitter</button>
+          </div>
+        </div>
+      </div>
+      <p class="hint">Les élèves ouvrent ce lien, ou tapent ce code dans « Envoyer au professeur ». Laisse cet onglet ouvert pendant la séance.</p>`;
+  }
+  bindSessionPanel();
+}
+
+/* ---------------- Envoi direct côté élève ---------------- */
+
+function renderSendBlock() {
+  const mount = $("#sendSyncBlock");
+  const others = $("#sendOtherWays");
+  if (!mount) return;
+  if (!isSyncEnabled()) {
+    mount.innerHTML = "";
+    mount.hidden = true;
+    if (others) others.hidden = true;
+    if (others) others.open = true;
+    return;
+  }
+  mount.hidden = false;
+  if (classCode) {
+    const already = Boolean(state && state.sentAt);
+    mount.innerHTML = `
+      <div class="send-class">
+        <p class="kicker">Classe</p>
+        <p class="send-class-code">${esc(classCode)}</p>
+        <button type="button" class="button primary" id="sendToClassButton">${already ? "Renvoyer la copie" : "Envoyer ma copie au professeur"}</button>
+        <p class="hint" id="sendStatus" role="status" aria-live="polite">${already ? "Copie déjà envoyée. Un nouvel envoi remplace la précédente." : ""}</p>
+        <button type="button" class="button ghost small" id="resetClassButton">Ce n'est pas ma classe</button>
+      </div>`;
+  } else {
+    mount.innerHTML = `
+      <div class="send-class">
+        <label class="field">
+          <span>Code de la classe</span>
+          <input id="sendClassInput" placeholder="XXXX-XXXX" maxlength="9" autocomplete="off" spellcheck="false" />
+        </label>
+        <button type="button" class="button primary" id="sendToClassButton">Envoyer ma copie au professeur</button>
+        <p class="hint" id="sendStatus" role="status" aria-live="polite">Le code est écrit au tableau par le professeur.</p>
+      </div>`;
+  }
+
+  const send = $("#sendToClassButton");
+  if (send) send.addEventListener("click", () => void sendCopyToClass());
+  const input = $("#sendClassInput");
+  if (input) {
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        void sendCopyToClass();
+      }
+    });
+  }
+  const reset = $("#resetClassButton");
+  if (reset) {
+    reset.addEventListener("click", () => {
+      classCode = "";
+      writeStoredValue(CLASS_CODE_KEY, "");
+      renderSendBlock();
+    });
+  }
+}
+
+async function sendCopyToClass() {
+  const status = $("#sendStatus");
+  const input = $("#sendClassInput");
+  const code = normalizeCode(input ? input.value : classCode);
+  if (!isValidCode(code)) {
+    if (status) status.textContent = "Le code doit ressembler à XXXX-XXXX.";
+    return;
+  }
+  if (!exportStatus().blocking) {
+    if (status) status.textContent = "Complète d'abord le dossier : questions, mécanismes, tri, carte, conclusion.";
+    return;
+  }
+  const button = $("#sendToClassButton");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Envoi…";
+  }
+  try {
+    const submission = buildSubmission();
+    pendingSubmission = submission;
+    await publishCopy(code, compactSubmission(submission));
+    classCode = code;
+    writeStoredValue(CLASS_CODE_KEY, classCode);
+    state.sentAt = new Date().toISOString();
+    saveNow();
+    if (input) input.value = "";
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Renvoyer la copie";
+    }
+    if (status) {
+      status.textContent = "Copie envoyée au professeur. Tu peux corriger et renvoyer : la copie sera remplacée.";
+    }
+    toast("Copie envoyée au professeur.");
+  } catch (error) {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Envoyer ma copie au professeur";
+    }
+    if (status) {
+      status.textContent =
+        error && error.status === 401
+          ? "Envoi refusé. Vérifie le code de la classe."
+          : "Envoi impossible. Vérifie le code et la connexion, puis réessaie.";
+    }
+    toast("Envoi impossible.");
   }
 }
 
@@ -2161,7 +2566,22 @@ async function init() {
   bindStatic();
   renderGlossary();
 
-  const copyParam = new URLSearchParams(window.location.search).get("copie");
+  const params = new URLSearchParams(window.location.search);
+  const copyParam = params.get("copie");
+  const classParam = params.get("classe");
+  classCode = normalizeCode(classParam || readStoredValue(CLASS_CODE_KEY));
+  teacherSession = normalizeCode(readStoredValue(TEACHER_SESSION_KEY));
+  if (classParam) {
+    if (isValidCode(classCode)) {
+      writeStoredValue(CLASS_CODE_KEY, classCode);
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete("classe");
+      window.history.replaceState({}, "", clean.toString());
+    } else {
+      classCode = "";
+    }
+  }
+
   const saved = await loadState();
   if (saved && hasActivity(saved)) {
     state = normalizeState(saved);

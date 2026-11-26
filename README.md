@@ -28,16 +28,31 @@ En haut à droite, le binôme renseigne sa classe et les prénoms/noms de **deux
 
 ## Envoi au professeur et correction
 
-Aucun serveur, aucun compte. La remise passe par un **lien de correction** que le binôme copie et transmet (ENT, messagerie, QR code).
+Les copies arrivent **directement dans l'onglet Correction**, pendant la séance. Aucun lien à transmettre, aucune messagerie.
 
-1. Dans l'étape 6, le binôme clique sur **Envoyer au professeur** une fois le dossier complet.
-2. Une fenêtre affiche un **lien** contenant toute la copie (compressée et encodée dans l'adresse), un **code de secours** replié et un fichier JSON téléchargeable. Le lien fait environ 1 500 caractères : c'est prévu pour être copié-collé, pas pour être retapé.
-3. Le professeur ouvre le lien, ou colle le lien/le code dans l'onglet **Correction**, ou y ouvre le fichier JSON.
-4. La copie s'affiche : réponses du binôme, **barème** à côté de chaque question, **case de points** et **correction rédigée** sous chaque question. La carte mentale se clique pour s'ouvrir en grand.
-5. Les points sont enregistrés automatiquement sur l'appareil du professeur ; le total sur 20 se met à jour en direct.
+1. Le professeur ouvre l'onglet **Correction** et clique sur **Créer une session**.
+2. L'application affiche un **code de classe** (8 caractères, par exemple `6HQ9-CM5Z`) et le lien des élèves (`…?classe=6HQ9-CM5Z`). Le professeur projette le lien, ou écrit le code au tableau.
+3. Chaque binôme ouvre ce lien (ou tape le code dans « Envoyer au professeur »), complète son dossier, puis clique sur **Envoyer ma copie au professeur**.
+4. La copie apparaît **toute seule** dans la liste du professeur, en quelques secondes. Il peut la réouvrir et la corriger même si le binôme renvoie une version mise à jour : les points déjà saisis sont conservés.
+5. Sous chaque question : le **barème**, la **case de points** et la **correction rédigée**. La carte mentale se clique pour s'ouvrir en grand.
 6. **Exporter les notes** produit un fichier CSV (classe, binôme, points par item, total) ouvrable dans un tableur.
 
 Le barème totalise 20 points : 12 questions × 0,5 = 6 pts, 6 mécanismes × 0,5 = 3 pts, 12 éléments de tri × 0,25 = 3 pts, carte mentale 4 pts, conclusion 4 pts. Les corrections sont définies dans `content.js` (`points` et `correction` sur chaque question, bloc `EVALUATION`).
+
+### Secours sans session
+
+Si la base est injoignable, si un élève travaille chez lui ou si le professeur préfère le papier, l'ancien circuit reste disponible dans **Autre moyen** : un lien de correction (environ 1 500 caractères, toute la copie encodée dedans), un fichier `.json` téléchargeable et un code de secours. Le professeur ouvre le lien, colle le code ou ouvre le fichier dans l'onglet Correction.
+
+### Base de données
+
+Les copies passent par une base **Firebase Realtime Database** (projet `sync-3626f`, région `europe-west1`, donc dans l'Union européenne). L'application n'utilise qu'un seul nœud, `enquete-regimes-totalitaires`, à côté des autres applications de la base ; les règles n'ouvrent que ce nœud.
+
+- Une session est créée par le professeur, puis les copies sont écrites dans `sessions/<CODE>/copies/<id>`.
+- Le code de session (8 caractères tirés au hasard) sert de clé d'accès : **qui connaît le code peut lire les copies de la session**. Les copies ne peuvent être ni supprimées, ni écrites hors du format attendu (règles de validation).
+- Le navigateur du professeur garde une copie locale des copies reçues et des notes, et se resynchronise à la réouverture de l'onglet.
+- Une session inutilisée reste dans la base ; elle n'apparaît pas dans l'application et ne gêne pas.
+
+Si la base n'est pas configurée (`DATABASE_URL` vide dans `sync.js`), l'application masque entièrement la session et garde seulement le lien et le fichier.
 
 Les copies reçues et les notes restent dans le navigateur du professeur. Il est conseillé d'exporter le CSV en fin de séance.
 
@@ -101,6 +116,7 @@ theme.css       thème « dossier d'archives » (pochettes, boîte à outils, fi
 correction.css  espace professeur : copies reçues, barème, saisie des points
 content.js      contenus historiques, questions, barème, corrections, glossaire, bibliographie
 app.js          logique du parcours, identité du binôme, sauvegarde, export, remise, correction
+sync.js         session de classe : envoi direct et réception en temps réel (Firebase)
 map.js          canevas de carte mentale et rendu spatial imprimable
 storage.js      IndexedDB avec repli localStorage
 assets/images/  images d'ambiance fournies par l'enseignant
@@ -120,8 +136,9 @@ Les données restent sur l'appareil. Elles peuvent être perdues si le navigateu
 
 ## Limites connues
 
-- **Pas de compte ni de synchronisation** : la sauvegarde est locale, et les copies reçues par le professeur restent dans **son** navigateur. Elles ne sont pas centralisées : il faut exporter le CSV et, si besoin, garder les liens reçus.
-- **Remise par lien** : le lien de correction contient les réponses encodées. Il est long ; certaines messageries le coupent. Le code de secours et le fichier JSON permettent de contourner ce problème. Aucune copie ne peut être envoyée directement dans une boîte sans action de l'élève.
+- **Pas de compte** : ni côté élève, ni côté professeur. Les notes restent dans le navigateur du professeur (export CSV conseillé), et le code de session y est mémorisé : sur un autre appareil, il faut rejoindre la session avec le code.
+- **Session et confidentialité** : qui connaît le code de session peut lire les copies de cette session. Les noms des élèves sont stockés dans la base Firebase (région européenne) pendant la séance et après. Pour un usage hors classe, vérifier ce point avec l'établissement.
+- **Réseau nécessaire** : l'envoi direct demande une connexion. En cas de coupure, le lien de correction et le fichier JSON restent disponibles.
 - **Pas de verrouillage des notes** : l'élève peut modifier sa copie localement, mais la copie transmise est figée au moment de l'envoi.
 - **PDF via l'impression du navigateur** : le rendu dépend du navigateur (Chrome, Edge, Firefox). L'aperçu est là pour vérifier avant impression.
 - **Sources secondaires** : EHNE, Histoire par l'image et USHMM sont des analyses d'historiens ; les décrets et lois sont des textes primaires. L'application ne remplace pas un manuel ni une validation par l'enseignant.
