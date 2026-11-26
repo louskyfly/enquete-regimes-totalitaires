@@ -7,6 +7,7 @@
   <title>Contrôle — Deux régimes totalitaires — URSS de Staline / Allemagne nazie</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="correction.css" />
   <link rel="icon" href="data:," />
 </head>
 <body>
@@ -30,11 +31,8 @@
             <input id="className" type="text" maxlength="20" autocomplete="off" placeholder="Ex. : 3e B" />
           </label>
           <div id="memberList" class="member-list"></div>
-          <div class="identity-actions">
-            <button type="button" class="button ghost small" id="addMember">+ Ajouter un élève</button>
-            <span class="muted small" id="memberHint">3 à 6 élèves</span>
-          </div>
-          <p class="identity-warning" id="identityWarning" hidden>Complète la classe et les noms pour pouvoir exporter.</p>
+          <p class="identity-hint" id="memberHint">Binôme · 2 élèves</p>
+          <p class="identity-warning" id="identityWarning" hidden>Complète la classe et les deux noms pour pouvoir exporter.</p>
         </div>
       </details>
       <div class="header-actions">
@@ -54,6 +52,7 @@
       <li><button type="button" class="step-button" data-step-target="3"><span class="step-num">4</span><span>Comparer</span></button></li>
       <li><button type="button" class="step-button" data-step-target="4"><span class="step-num">5</span><span>Carte</span></button></li>
       <li><button type="button" class="step-button" data-step-target="5"><span class="step-num">6</span><span>Vérifier</span></button></li>
+      <li><button type="button" class="step-button teacher-tab" data-step-target="6"><span class="step-num">7</span><span>Correction</span></button></li>
     </ol>
     <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
   </nav>
@@ -196,9 +195,9 @@
             <div class="map-empty" id="mapEmpty">
               <p class="kicker">Construction guidée</p>
               <h3>La carte part de ton tri</h3>
-              <p>Termine le tri des 16 éléments, puis crée la carte. Tu pourras ensuite la déplacer, la compléter et la mettre en forme.</p>
+              <p>Termine le tri des 12 éléments, puis crée la carte. Tu pourras ensuite la déplacer, la compléter et la mettre en forme.</p>
               <button type="button" class="button primary" id="mapFromSort" disabled>Créer la carte à partir de mon tri</button>
-              <p class="map-sort-progress" id="mapSortProgress">0 / 16 éléments triés</p>
+              <p class="map-sort-progress" id="mapSortProgress">0 / 12 éléments triés</p>
             </div>
           </div>
           <p class="hint" id="mapTouchHelp">Glisse le fond pour déplacer. Utilise les boutons + / − pour zoomer. Touche un nœud pour le modifier.</p>
@@ -249,6 +248,7 @@
         </div>
         <div class="export-actions">
           <button type="button" class="button primary" id="previewButton" aria-describedby="exportGate">Exporter mon dossier en PDF</button>
+          <button type="button" class="button secondary" id="sendTeacherButton" disabled>Envoyer au professeur</button>
           <button type="button" class="button secondary" id="backupButton2">Télécharger une sauvegarde</button>
           <button type="button" class="button ghost" id="importButton">Importer une sauvegarde</button>
           <input type="file" id="importInput" accept="application/json,.json" hidden />
@@ -264,6 +264,39 @@
       <div class="step-actions">
         <button type="button" class="button secondary" data-step-target="4">Retour à la carte</button>
         <button type="button" class="button ghost" id="newActivity">Nouvelle activité</button>
+      </div>
+    </section>
+    <!-- ÉTAPE 6 : CORRECTION -->
+    <section class="step correction-step" id="step-6" data-step="6" aria-labelledby="step6-title" hidden>
+      <div class="step-head compact">
+        <p class="kicker">Espace professeur</p>
+        <h2 id="step6-title" tabindex="-1">Correction</h2>
+        <p class="lead">Colle le lien ou le code envoyé par un binôme. Les copies ouvertes et les notes restent sur cet appareil.</p>
+      </div>
+
+      <div class="correction-toolbar">
+        <label class="field">
+          <span>Lien ou code de correction</span>
+          <textarea id="correctionCodeInput" rows="3" placeholder="Colle ici le lien reçu du binôme..."></textarea>
+        </label>
+        <div class="toolbar-actions">
+          <button type="button" class="button primary" id="openCorrectionButton">Ouvrir la copie</button>
+          <button type="button" class="button secondary" id="exportGradesButton">Exporter les notes</button>
+          <label class="button ghost small file-button" for="correctionFileInput">
+            Ouvrir un fichier .json
+            <input type="file" id="correctionFileInput" accept="application/json,.json" hidden />
+          </label>
+        </div>
+        <p class="hint" id="correctionMessage" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="correction-layout">
+        <aside class="correction-list-panel">
+          <h3>Copies reçues</h3>
+          <div id="correctionList" class="correction-list"></div>
+          <p class="hint">Les copies et les notes sont stockées dans ce navigateur. Pense à exporter les notes.</p>
+        </aside>
+        <div id="correctionView" class="correction-view" aria-live="polite"></div>
       </div>
     </section>
   </main>
@@ -351,6 +384,34 @@
         <button type="button" class="button primary" id="printButton">Imprimer / Enregistrer en PDF</button>
         <button type="button" class="button secondary" data-close-dialog="previewDialog">Fermer</button>
       </div>
+    </div>
+  </dialog>
+
+  <!-- Dialogue envoi au professeur -->
+  <dialog id="sendDialog" class="modal modal-wide" aria-labelledby="sendTitle">
+    <div class="modal-inner">
+      <div class="modal-head">
+        <div>
+          <p class="kicker">Envoi au professeur</p>
+          <h2 id="sendTitle">Lien de correction</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog="sendDialog" aria-label="Fermer l'envoi">×</button>
+      </div>
+      <p>Copie ce lien et envoie-le au professeur. Il contient les réponses du binôme : ne le partage pas avec d'autres élèves.</p>
+      <label class="field">
+        <span>Lien de correction</span>
+        <textarea id="sendLink" rows="5" readonly></textarea>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="button primary" id="copySendLink">Copier le lien</button>
+        <button type="button" class="button secondary" id="downloadCopy">Télécharger la copie</button>
+      </div>
+      <p class="hint">Si le lien est trop long pour la messagerie, transmets aussi le code ci-dessous : le professeur peut le coller dans l'onglet Correction.</p>
+      <label class="field">
+        <span>Code de correction</span>
+        <textarea id="sendCode" rows="4" readonly></textarea>
+      </label>
+      <button type="button" class="button ghost small" id="copySendCode">Copier le code</button>
     </div>
   </dialog>
 

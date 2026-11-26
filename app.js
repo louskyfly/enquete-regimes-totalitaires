@@ -7,15 +7,16 @@ import {
   SORT_ITEMS,
   GLOSSARY,
   BIBLIOGRAPHY,
-  CONTROL_MODE
+  CONTROL_MODE,
+  EVALUATION
 } from "./content.js";
-import { CATEGORIES, initMap, setMapData, buildFromSort, toSVG, undo, redo, zoomIn, zoomOut, fitView, addNode, startLink } from "./map.js";
+import { CATEGORIES, initMap, setMapData, buildFromSort, toSVG, toSVGFromData, undo, redo, zoomIn, zoomOut, fitView, addNode, startLink } from "./map.js";
 import { saveState, loadState, clearState } from "./storage.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
-const STEP_LABELS = ["Briefing", "Enquête", "Mécanismes", "Comparer", "Carte", "Vérifier"];
+const STEP_LABELS = ["Briefing", "Enquête", "Mécanismes", "Comparer", "Carte", "Vérifier", "Correction"];
 const SORT_COLUMN_IDS = SORT_COLUMNS.map((c) => c.id);
 
 let state = null;
@@ -61,7 +62,7 @@ function defaultState() {
     studentName: "",
     group: {
       className: "",
-      members: [emptyMember(), emptyMember(), emptyMember()]
+      members: [emptyMember(), emptyMember()]
     },
     step: 0,
     dossiers: {},
@@ -80,22 +81,22 @@ function normalizeState(raw) {
   if (!raw || typeof raw !== "object") return base;
   const merged = { ...base, ...raw };
   merged.version = 1;
-  merged.step = clamp(Number(merged.step) || 0, 0, 5);
+  merged.step = clamp(Number(merged.step) || 0, 0, 6);
   merged.studentName = String(merged.studentName || "");
   merged.conclusion = String(merged.conclusion || "");
   if (raw.group && Array.isArray(raw.group.members)) {
     const members = raw.group.members
-      .slice(0, 6)
+      .slice(0, 2)
       .map((member) => ({
         firstName: String(member.firstName || ""),
         lastName: String(member.lastName || "")
       }));
-    while (members.length < 3) members.push(emptyMember());
+    while (members.length < 2) members.push(emptyMember());
     merged.group = { className: String(raw.group.className || ""), members };
   } else {
     const legacy = String(raw.studentName || "").trim();
     const parts = legacy.split(/\s+/).filter(Boolean);
-    const members = [emptyMember(), emptyMember(), emptyMember()];
+    const members = [emptyMember(), emptyMember()];
     if (legacy) {
       members[0] = {
         firstName: parts[0] || "",
@@ -136,14 +137,13 @@ function identityComplete() {
   const members = group.members || [];
   return (
     String(group.className || "").trim().length > 0 &&
-    members.length >= 3 &&
-    members.length <= 6 &&
+    members.length === 2 &&
     members.every((member) => member.firstName.trim() && member.lastName.trim())
   );
 }
 
-function groupNames() {
-  return (state.group?.members || [])
+function groupNames(group = state.group) {
+  return (group?.members || [])
     .map(memberFullName)
     .filter(Boolean)
     .join(", ");
@@ -206,10 +206,10 @@ function exportStatus() {
   const sources = nodes.filter((n) => String(n.source || "").trim()).length;
 
   const missing = [];
-  if (!identity) missing.push("Renseigne la classe et les prénoms/noms des 3 à 6 élèves.");
+  if (!identity) missing.push("Renseigne la classe et les prénoms/noms des deux élèves du binôme.");
   if (!questions) missing.push(`Réponds aux questions des dossiers (${answered}/${total}).`);
-  if (!mechanisms) missing.push("Classe les 9 mécanismes dans la boîte à outils.");
-  if (!sort) missing.push("Place les 16 éléments du tri.");
+  if (!mechanisms) missing.push(`Classe les ${MECHANISMS.length} mécanismes dans la boîte à outils.`);
+  if (!sort) missing.push(`Place les ${SORT_ITEMS.length} éléments du tri.`);
   if (!map) missing.push("Crée la carte mentale à partir de ton tri.");
   if (!conclusion) missing.push("Rédige une conclusion de 3 phrases minimum.");
 
@@ -324,8 +324,8 @@ function renderIdentitySummary() {
   const complete = identityComplete();
   if (summary) summary.textContent = groupSummary();
   if (warning) warning.hidden = complete;
-  if (hint) hint.textContent = `3 à 6 élèves · ${state.group.members.length}`;
-  if (add) add.disabled = state.group.members.length >= 6;
+  if (hint) hint.textContent = "Binôme · 2 élèves";
+  if (add) add.disabled = true;
   if (panel) panel.classList.toggle("is-incomplete", !complete);
   const classInput = $("#className");
   if (classInput && document.activeElement !== classInput) classInput.value = state.group.className || "";
@@ -905,7 +905,7 @@ function checklistItems() {
     {
       id: "identity",
       ok: identityComplete(),
-      label: "L'identité du groupe est complète (classe + 3 à 6 noms).",
+      label: "L'identité du binôme est complète (classe + 2 noms).",
       tip: "Ouvre « Identité du groupe » en haut à droite."
     },
     {
@@ -917,13 +917,13 @@ function checklistItems() {
     {
       id: "mechanisms",
       ok: allMechanismsChosen(),
-      label: "Les 9 mécanismes sont classés.",
+      label: `Les ${MECHANISMS.length} mécanismes sont classés.`,
       tip: "Utilise la boîte à outils de l'étape 3."
     },
     {
       id: "sort",
       ok: allSortPlaced(),
-      label: "Les 16 éléments du tri sont placés.",
+      label: `Les ${SORT_ITEMS.length} éléments du tri sont placés.`,
       tip: "Termine le tri de l'étape 4."
     },
     {
@@ -994,6 +994,13 @@ function renderExportGate() {
       : "Complète les éléments manquants avant d'exporter.";
   }
   const gate = $("#exportGate");
+  const sendButton = $("#sendTeacherButton");
+  if (sendButton) {
+    sendButton.disabled = !status.blocking;
+    sendButton.title = status.blocking
+      ? "Envoyer le travail au professeur"
+      : "Complète les éléments manquants avant l'envoi.";
+  }
   if (!gate) return;
   const missing = status.missing.length
     ? `<div class="gate-block"><p class="gate-title">Pour débloquer l'export</p><ul>${status.missing
@@ -1063,10 +1070,11 @@ function renderStep() {
   if (bar) bar.style.width = `${((state.step + 1) / STEP_LABELS.length) * 100}%`;
   updateMapEmpty();
   if (state.step === 5) updateChecklist();
+  if (state.step === 6) renderCorrectionPage();
 }
 
 function goToStep(step, focus = true) {
-  const next = clamp(Number(step) || 0, 0, 5);
+  const next = clamp(Number(step) || 0, 0, 6);
   state.step = next;
   const toastEl = $("#toast");
   if (toastEl) toastEl.hidden = true;
@@ -1370,6 +1378,541 @@ function backup() {
   toast("Sauvegarde téléchargée. Garde ce fichier pour pouvoir reprendre ailleurs.");
 }
 
+const CORRECTIONS_KEY = "enquete-corrections-v1";
+let currentCorrectionId = null;
+let pendingSubmission = null;
+
+function formatPoints(value) {
+  return Number(value).toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+}
+
+async function copyTextToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function bytesToBase64Url(bytes) {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function base64UrlToBytes(value) {
+  const clean = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
+  const padded = clean + "===".slice((clean.length + 3) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+async function encodeCopy(submission) {
+  const json = JSON.stringify(submission);
+  if (typeof CompressionStream !== "undefined") {
+    try {
+      const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+      const buffer = await new Response(stream).arrayBuffer();
+      return "z" + bytesToBase64Url(new Uint8Array(buffer));
+    } catch (_) {
+      /* repli sans compression */
+    }
+  }
+  return "j" + bytesToBase64Url(new TextEncoder().encode(json));
+}
+
+async function decodeCopy(input) {
+  const clean = String(input || "").trim();
+  if (!clean) throw new Error("Copie vide");
+  const prefix = clean[0];
+  const payload = clean.slice(1);
+  let json = "";
+  if (prefix === "z" && typeof DecompressionStream !== "undefined") {
+    try {
+      const bytes = base64UrlToBytes(payload);
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      json = await new Response(stream).text();
+    } catch (_) {
+      throw new Error("Compression illisible");
+    }
+  } else if (prefix === "j") {
+    json = new TextDecoder().decode(base64UrlToBytes(payload));
+  } else {
+    try {
+      JSON.parse(clean);
+      json = clean;
+    } catch (_) {
+      json = new TextDecoder().decode(base64UrlToBytes(clean));
+    }
+  }
+  const submission = JSON.parse(json);
+  if (!submission || submission.version !== 1 || !submission.group || !submission.map) {
+    throw new Error("Format de copie invalide");
+  }
+  return submission;
+}
+
+function extractCopyCode(input) {
+  const value = String(input || "").trim();
+  if (!value) return "";
+  try {
+    const url = new URL(value, window.location.href);
+    const code = url.searchParams.get("copie");
+    if (code) return code;
+  } catch (_) {
+    /* ce n'est pas une URL */
+  }
+  return value.replace(/\s+/g, "");
+}
+
+function buildSubmission() {
+  return {
+    version: 1,
+    id: `copie-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    group: JSON.parse(JSON.stringify(state.group)),
+    dossiers: JSON.parse(JSON.stringify(state.dossiers)),
+    mechanisms: JSON.parse(JSON.stringify(state.mechanisms)),
+    sort: { ...state.sort },
+    map: JSON.parse(JSON.stringify(state.map)),
+    conclusion: state.conclusion,
+    submittedAt: new Date().toISOString()
+  };
+}
+
+function loadCorrections() {
+  try {
+    return JSON.parse(localStorage.getItem(CORRECTIONS_KEY) || "{}");
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveCorrections(corrections) {
+  try {
+    localStorage.setItem(CORRECTIONS_KEY, JSON.stringify(corrections));
+    return true;
+  } catch (_) {
+    toast("Mémoire locale pleine : exporte les notes et supprime d'anciennes copies.");
+    return false;
+  }
+}
+
+function totalForEntry(entry) {
+  return Object.values(entry?.grades || {}).reduce((sum, value) => sum + (Number(value) || 0), 0);
+}
+
+function gradeInput(key, max, value) {
+  const current = value === undefined || value === null || value === "" ? "" : Number(value);
+  return `<label class="grade-field">Points
+    <input type="number" class="grade-input" data-grade-key="${esc(key)}" data-max="${max}" min="0" max="${max}" step="0.25" value="${current}" />
+    <span class="bareme">/ ${formatPoints(max)}</span>
+  </label>`;
+}
+
+function renderCorrectionList() {
+  const list = $("#correctionList");
+  if (!list) return;
+  const corrections = loadCorrections();
+  const entries = Object.values(corrections).sort(
+    (a, b) => new Date(b.submission.submittedAt).getTime() - new Date(a.submission.submittedAt).getTime()
+  );
+  if (!entries.length) {
+    list.innerHTML = `<p class="muted">Aucune copie pour l'instant. Ouvre un lien reçu pour commencer.</p>`;
+    return;
+  }
+  list.innerHTML = entries
+    .map((entry, index) => {
+      const sub = entry.submission;
+      const names = groupNames(sub.group) || `Binôme ${index + 1}`;
+      const className = String(sub.group.className || "").trim() || "Classe ?";
+      const date = new Date(sub.submittedAt).toLocaleDateString("fr-FR");
+      return `<div class="correction-list-item ${sub.id === currentCorrectionId ? "is-current" : ""}">
+        <button type="button" class="correction-open" data-copy-id="${esc(sub.id)}">
+          <strong>${esc(names)}</strong>
+          <span>${esc(className)} · ${esc(date)}</span>
+          <span class="correction-list-score">${formatPoints(totalForEntry(entry))} / 20</span>
+        </button>
+        <button type="button" class="correction-delete" data-delete-copy="${esc(sub.id)}" aria-label="Supprimer cette copie">×</button>
+      </div>`;
+    })
+    .join("");
+}
+
+function renderCorrectionView() {
+  const view = $("#correctionView");
+  if (!view) return;
+  const corrections = loadCorrections();
+  const entry = currentCorrectionId ? corrections[currentCorrectionId] : null;
+  if (!entry) {
+    view.innerHTML = `<div class="correction-empty">
+      <h3>Comment corriger ?</h3>
+      <p>Le binôme t'envoie un lien. Ouvre-le ou colle-le dans le champ ci-dessus. La copie apparaît ici avec les réponses, le barème, ta case de points et la correction.</p>
+      <p class="muted">Les copies et les notes sont enregistrées dans ce navigateur, sur cet appareil uniquement.</p>
+    </div>`;
+    return;
+  }
+
+  const sub = entry.submission;
+  const grades = entry.grades || {};
+  const names = groupNames(sub.group) || "Binôme";
+  const className = String(sub.group.className || "").trim() || "Classe non renseignée";
+  const date = new Date(sub.submittedAt).toLocaleString("fr-FR");
+  let mapSvg = "";
+  try {
+    mapSvg = sub.map && sub.map.nodes && sub.map.nodes.length ? toSVGFromData(sub.map) : "";
+  } catch (_) {
+    mapSvg = "";
+  }
+
+  const questionsHtml = DOSSIERS.map((dossier) => {
+    const answers = sub.dossiers?.[dossier.id]?.answers || {};
+    return `<div class="correction-dossier">
+      <h4>Dossier ${dossier.number} — ${esc(dossier.title)}</h4>
+      ${dossier.questions
+        .map((question) => {
+          const answer = String(answers[question.id] || "").trim();
+          const key = `q:${question.id}`;
+          return `<article class="correction-item">
+            <div class="correction-item-head">
+              <span class="correction-label">Question</span>
+              <span class="bareme">Barème : ${formatPoints(question.points)} pt</span>
+            </div>
+            <p class="correction-question">${esc(question.prompt)}</p>
+            <div class="correction-answer"><span>Réponse du binôme</span><p>${answer ? esc(answer).replace(/\n/g, "<br>") : "Non répondu."}</p></div>
+            <div class="correction-grade">${gradeInput(key, question.points, grades[key])}</div>
+            <div class="correction-key"><span>Correction</span><p>${esc(question.correction || "Correction non renseignée.")}</p></div>
+          </article>`;
+        })
+        .join("")}
+    </div>`;
+  }).join("");
+
+  const mechanismLabels = { urss: "URSS de Staline", allemagne: "Allemagne nazie", both: "Les deux" };
+  const mechanismsHtml = MECHANISMS.map((mechanism) => {
+    const choice = sub.mechanisms?.[mechanism.id]?.choice;
+    const key = `m:${mechanism.id}`;
+    return `<article class="correction-item">
+      <div class="correction-item-head"><span class="correction-label">Mécanisme</span><span class="bareme">Barème : ${formatPoints(mechanism.points)} pt</span></div>
+      <p class="correction-question">${esc(mechanism.label)}</p>
+      <div class="correction-answer"><span>Réponse du binôme</span><p>${esc(mechanismLabels[choice] || "Non répondu.")}</p></div>
+      <div class="correction-grade">${gradeInput(key, mechanism.points, grades[key])}</div>
+      <div class="correction-key"><span>Correction</span><p>${esc(mechanism.feedback)}</p></div>
+    </article>`;
+  }).join("");
+
+  const sortHtml = SORT_ITEMS.map((item) => {
+    const column = sub.sort?.[item.id];
+    const columnLabel = SORT_COLUMNS.find((c) => c.id === column)?.label || "Non placé";
+    const key = `s:${item.id}`;
+    return `<article class="correction-item">
+      <div class="correction-item-head"><span class="correction-label">Tri</span><span class="bareme">Barème : ${formatPoints(item.points)} pt</span></div>
+      <p class="correction-question">${esc(item.text)}</p>
+      <div class="correction-answer"><span>Placement du binôme</span><p>${esc(columnLabel)}</p></div>
+      <div class="correction-grade">${gradeInput(key, item.points, grades[key])}</div>
+      <div class="correction-key"><span>Correction</span><p>${esc(item.feedback)}</p></div>
+    </article>`;
+  }).join("");
+
+  view.innerHTML = `<div class="correction-document">
+    <header class="correction-head">
+      <div>
+        <p class="kicker">Copie reçue</p>
+        <h3>${esc(names)}</h3>
+        <p class="muted">${esc(className)} · ${esc(date)} · ${esc(sub.id)}</p>
+      </div>
+      <div class="correction-total"><strong id="correctionTotal">${formatPoints(totalForEntry(entry))}</strong><span>/ 20</span></div>
+    </header>
+
+    <section class="correction-block">
+      <div class="correction-block-head"><h3>Carte mentale</h3><span class="bareme">Barème : ${formatPoints(EVALUATION.map.points)} pts</span></div>
+      <div class="correction-map">${mapSvg || '<p class="muted">Carte non fournie.</p>'}</div>
+      <div class="correction-grade">${gradeInput("map", EVALUATION.map.points, grades.map)}</div>
+      <div class="correction-key"><span>Correction</span><p>${esc(EVALUATION.map.correction)}</p></div>
+    </section>
+
+    <section class="correction-block">
+      <h3>Questions d'enquête</h3>
+      ${questionsHtml}
+    </section>
+
+    <section class="correction-block">
+      <h3>Boîte à outils — mécanismes</h3>
+      ${mechanismsHtml}
+    </section>
+
+    <section class="correction-block">
+      <h3>Tri comparatif</h3>
+      ${sortHtml}
+    </section>
+
+    <section class="correction-block">
+      <h3>Conclusion comparative</h3>
+      <article class="correction-item">
+        <div class="correction-item-head"><span class="correction-label">Conclusion</span><span class="bareme">Barème : ${formatPoints(EVALUATION.conclusion.points)} pts</span></div>
+        <div class="correction-answer"><span>Réponse du binôme</span><p>${sub.conclusion ? esc(sub.conclusion).replace(/\n/g, "<br>") : "Non rédigée."}</p></div>
+        <div class="correction-grade">${gradeInput("conclusion", EVALUATION.conclusion.points, grades.conclusion)}</div>
+        <div class="correction-key"><span>Correction</span><p>${esc(EVALUATION.conclusion.correction)}</p></div>
+      </article>
+    </section>
+
+    <div class="correction-total-line">
+      <strong>Total : <span id="correctionTotalBottom">${formatPoints(totalForEntry(entry))}</span> / 20</strong>
+      <button type="button" class="button secondary small" id="saveCorrectionButton">Enregistrer la correction</button>
+    </div>
+  </div>`;
+}
+
+function renderCorrectionPage() {
+  renderCorrectionList();
+  renderCorrectionView();
+}
+
+function ingestSubmission(submission) {
+  const corrections = loadCorrections();
+  if (!submission.id) submission.id = `copie-${Date.now()}`;
+  const existing = corrections[submission.id];
+  corrections[submission.id] = {
+    submission,
+    grades: existing?.grades || {},
+    updatedAt: Date.now()
+  };
+  saveCorrections(corrections);
+  currentCorrectionId = submission.id;
+  goToStep(6, false);
+  renderCorrectionPage();
+  const url = new URL(window.location.href);
+  url.search = "";
+  window.history.replaceState({}, "", url.toString());
+}
+
+async function openCorrectionFromCode(input) {
+  const message = $("#correctionMessage");
+  try {
+    const code = extractCopyCode(input);
+    const submission = await decodeCopy(code);
+    ingestSubmission(submission);
+    if (message) message.textContent = "Copie ouverte. Tu peux saisir les points.";
+    const codeInput = $("#correctionCodeInput");
+    if (codeInput) codeInput.value = "";
+    toast("Copie ouverte.");
+  } catch (_) {
+    goToStep(6, false);
+    renderCorrectionPage();
+    if (message) message.textContent = "Lien ou code illisible. Vérifie qu'il a été copié en entier.";
+    toast("Copie illisible.");
+  }
+}
+
+async function openCorrectionFromFile(file) {
+  const message = $("#correctionMessage");
+  try {
+    const text = await file.text();
+    const submission = JSON.parse(text);
+    if (!submission || submission.version !== 1 || !submission.group || !submission.map) {
+      throw new Error("format");
+    }
+    ingestSubmission(submission);
+    if (message) message.textContent = "Copie ouverte. Tu peux saisir les points.";
+    toast("Copie ouverte.");
+  } catch (_) {
+    if (message) message.textContent = "Fichier illisible : ce n'est pas une copie téléchargée depuis l'application.";
+    toast("Fichier illisible.");
+  }
+}
+
+async function openSendDialog() {
+  const status = exportStatus();
+  if (!status.blocking) {
+    toast("Complète d'abord le dossier avant de l'envoyer.");
+    return;
+  }
+  try {
+    const submission = buildSubmission();
+    const code = await encodeCopy(submission);
+    const link = new URL(window.location.href);
+    link.search = "?copie=" + encodeURIComponent(code);
+    link.hash = "";
+    pendingSubmission = submission;
+    $("#sendLink").value = link.toString();
+    $("#sendCode").value = code;
+    $("#sendDialog").showModal();
+  } catch (_) {
+    toast("Impossible de préparer le lien de correction.");
+  }
+}
+
+function exportGrades() {
+  const corrections = loadCorrections();
+  const entries = Object.values(corrections);
+  if (!entries.length) {
+    toast("Aucune copie à exporter.");
+    return;
+  }
+  const questionKeys = DOSSIERS.flatMap((d) => d.questions.map((q) => `q:${q.id}`));
+  const mechanismKeys = MECHANISMS.map((m) => `m:${m.id}`);
+  const sortKeys = SORT_ITEMS.map((item) => `s:${item.id}`);
+  const header = [
+    "Classe",
+    "Binôme",
+    "Date",
+    ...questionKeys.map((_, i) => `Q${i + 1}`),
+    ...mechanismKeys.map((_, i) => `M${i + 1}`),
+    ...sortKeys.map((_, i) => `S${i + 1}`),
+    "Carte",
+    "Conclusion",
+    "Total",
+    "Barème"
+  ];
+  const rows = entries
+    .sort((a, b) => new Date(a.submission.submittedAt) - new Date(b.submission.submittedAt))
+    .map((entry) => {
+      const sub = entry.submission;
+      const grades = entry.grades || {};
+      return [
+        String(sub.group.className || ""),
+        groupNames(sub.group),
+        new Date(sub.submittedAt).toLocaleString("fr-FR"),
+        ...questionKeys.map((key) => grades[key] ?? ""),
+        ...mechanismKeys.map((key) => grades[key] ?? ""),
+        ...sortKeys.map((key) => grades[key] ?? ""),
+        grades.map ?? "",
+        grades.conclusion ?? "",
+        formatPoints(totalForEntry(entry)),
+        "20"
+      ];
+    });
+  const csv = "\uFEFF" + [header, ...rows]
+    .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(";"))
+    .join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `notes-corrections-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast("Notes exportées en CSV.");
+}
+
+function bindCorrection() {
+  const sendButton = $("#sendTeacherButton");
+  if (sendButton) sendButton.addEventListener("click", () => void openSendDialog());
+
+  const openButton = $("#openCorrectionButton");
+  if (openButton) {
+    openButton.addEventListener("click", () => {
+      const input = $("#correctionCodeInput");
+      if (input) void openCorrectionFromCode(input.value);
+    });
+  }
+
+  const exportButton = $("#exportGradesButton");
+  if (exportButton) exportButton.addEventListener("click", exportGrades);
+
+  const fileInput = $("#correctionFileInput");
+  if (fileInput) {
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (file) void openCorrectionFromFile(file);
+      fileInput.value = "";
+    });
+  }
+
+  const list = $("#correctionList");
+  if (list) {
+    list.addEventListener("click", (event) => {
+      const open = event.target.closest("[data-copy-id]");
+      if (open) {
+        currentCorrectionId = open.dataset.copyId;
+        renderCorrectionList();
+        renderCorrectionView();
+        return;
+      }
+      const remove = event.target.closest("[data-delete-copy]");
+      if (remove) {
+        if (!window.confirm("Supprimer cette copie et ses notes de cet appareil ?")) return;
+        const corrections = loadCorrections();
+        delete corrections[remove.dataset.deleteCopy];
+        saveCorrections(corrections);
+        if (currentCorrectionId === remove.dataset.deleteCopy) currentCorrectionId = null;
+        renderCorrectionPage();
+      }
+    });
+  }
+
+  const view = $("#correctionView");
+  if (view) {
+    view.addEventListener("input", (event) => {
+      const input = event.target.closest("[data-grade-key]");
+      if (!input || !currentCorrectionId) return;
+      const max = Number(input.dataset.max) || 0;
+      let value = Number(input.value);
+      if (!Number.isFinite(value)) value = 0;
+      value = clamp(value, 0, max);
+      input.value = value;
+      const corrections = loadCorrections();
+      const entry = corrections[currentCorrectionId];
+      if (!entry) return;
+      entry.grades = { ...(entry.grades || {}), [input.dataset.gradeKey]: value };
+      entry.updatedAt = Date.now();
+      saveCorrections(corrections);
+      const total = formatPoints(totalForEntry(entry));
+      const top = $("#correctionTotal");
+      const bottom = $("#correctionTotalBottom");
+      if (top) top.textContent = total;
+      if (bottom) bottom.textContent = total;
+      renderCorrectionList();
+    });
+    view.addEventListener("click", (event) => {
+      if (event.target.closest("#saveCorrectionButton")) {
+        toast("Correction enregistrée sur cet appareil.");
+      }
+    });
+  }
+
+  const copyLink = $("#copySendLink");
+  if (copyLink) {
+    copyLink.addEventListener("click", async () => {
+      const text = $("#sendLink").value;
+      const ok = await copyTextToClipboard(text);
+      toast(ok ? "Lien copié. Envoie-le au professeur." : "Copie impossible : sélectionne le lien et copie-le à la main.");
+    });
+  }
+  const copyCode = $("#copySendCode");
+  if (copyCode) {
+    copyCode.addEventListener("click", async () => {
+      const text = $("#sendCode").value;
+      const ok = await copyTextToClipboard(text);
+      toast(ok ? "Code copié." : "Copie impossible : sélectionne le code et copie-le à la main.");
+    });
+  }
+  const download = $("#downloadCopy");
+  if (download) {
+    download.addEventListener("click", () => {
+      if (!pendingSubmission) return;
+      const classSlug = slugify(pendingSubmission.group.className || "binome");
+      const blob = new Blob([JSON.stringify(pendingSubmission, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `copie-${classSlug}-${pendingSubmission.id}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast("Copie téléchargée.");
+    });
+  }
+}
+
 async function importBackup(file) {
   try {
     const text = await file.text();
@@ -1466,6 +2009,7 @@ function bindStatic() {
   bindSort();
   bindChecklist();
   bindMapToolbar();
+  bindCorrection();
 
   if (CONTROL_MODE) {
     const sortCheck = $("#sortCheck");
@@ -1501,10 +2045,15 @@ async function init() {
   bindStatic();
   renderGlossary();
 
+  const copyParam = new URLSearchParams(window.location.search).get("copie");
   const saved = await loadState();
   if (saved && hasActivity(saved)) {
     state = normalizeState(saved);
     renderAll();
+    if (copyParam) {
+      await openCorrectionFromCode(copyParam);
+      return;
+    }
     const meta = $("#resumeMeta");
     if (meta) {
       const date = saved.updatedAt ? new Date(saved.updatedAt).toLocaleString("fr-FR") : "date inconnue";
@@ -1525,6 +2074,7 @@ async function init() {
     state = defaultState();
     renderAll();
     setSaveStatus("Prêt.", "");
+    if (copyParam) await openCorrectionFromCode(copyParam);
   }
 }
 

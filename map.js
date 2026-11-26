@@ -1189,6 +1189,18 @@ export function toSVG() {
   return parts.join("");
 }
 
+export function toSVGFromData(data) {
+  const previousNodes = state.nodes;
+  const previousLinks = state.links;
+  const normalized = normalize(data);
+  state.nodes = normalized.nodes;
+  state.links = normalized.links;
+  const svg = toSVG();
+  state.nodes = previousNodes;
+  state.links = previousLinks;
+  return svg;
+}
+
 /**
  * Version imprimable : une mise en page compacte et lisible, organisée par
  * catégories, plutôt que la disposition spatiale libre du canevas.

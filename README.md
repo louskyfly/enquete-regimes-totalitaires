@@ -4,26 +4,42 @@ Application web pédagogique en français pour des élèves de troisième : comp
 
 **Site en ligne :** https://louskyfly.github.io/enquete-regimes-totalitaires/
 
-> **Version contrôle** : les indices, les synthèses de dossier et les corrections automatiques sont masqués. Les réponses de l'élève (questions, mécanismes, tri) sont exportées dans le PDF. Pour revenir à la version d'entraînement, passer `CONTROL_MODE` à `false` dans `content.js`.
+> **Version contrôle** : les indices, les synthèses de dossier et les corrections automatiques sont masqués côté élèves. Les réponses du binôme (questions, mécanismes, tri, carte, conclusion) sont exportées dans le PDF et peuvent être **envoyées au professeur**, qui les corrige dans l'onglet **Correction** du même site. Pour revenir à la version d'entraînement, passer `CONTROL_MODE` à `false` dans `content.js`.
 
 ## Ce que fait l'application
 
-Le parcours suit six étapes :
+L'activité est calibrée pour **une heure, en binôme**. Le parcours suit sept étapes :
 
 1. **Briefing** : mission, objectifs, avertissement sur les contenus difficiles.
-2. **Enquête** : quatre dossiers documentaires courts, en français, avec questions d'observation et de contextualisation.
-3. **Mécanismes** : neuf affirmations à attribuer à l'URSS, à l'Allemagne nazie ou aux deux.
-4. **Comparer** : seize éléments à trier entre « points communs », « URSS », « Allemagne nazie » et « à vérifier / à nuancer » (dont des images de propagande).
+2. **Enquête** : quatre dossiers documentaires courts, en français, avec trois questions d'observation et de contextualisation chacun.
+3. **Mécanismes** : six affirmations à attribuer à l'URSS, à l'Allemagne nazie ou aux deux.
+4. **Comparer** : douze éléments à trier entre « points communs », « URSS », « Allemagne nazie » et « à vérifier / à nuancer » (dont des images de propagande).
 5. **Carte** : canevas déplaçable et zoomable, nœuds, liens, notes, sources, annuler/rétablir. La carte se crée uniquement à partir du tri, puis se modifie librement.
-6. **Vérifier** : critères de réussite, conclusion comparative, aperçu et export PDF.
+6. **Vérifier** : critères de réussite, conclusion comparative, aperçu et export PDF, envoi au professeur.
+7. **Correction** (espace professeur) : ouverture des copies reçues, réponses, barème, saisie des points, correction sous chaque question, total sur 20 et export des notes.
 
-En version contrôle, les étapes 2 à 4 ne donnent ni piste, ni synthèse, ni correction immédiate. Les réponses sont enregistrées puis reprises dans l'export PDF.
+En version contrôle, les étapes 2 à 4 ne donnent ni piste, ni synthèse, ni correction immédiate. Les réponses sont enregistrées puis reprises dans l'export PDF et dans la copie envoyée au professeur.
 
 La progression est enregistrée automatiquement dans le navigateur (IndexedDB, avec repli sur `localStorage`). Aucun compte n'est nécessaire. Une sauvegarde JSON peut être téléchargée et réimportée.
 
-### Identité du groupe
+### Identité du binôme
 
-En haut à droite, le groupe renseigne sa classe et les prénoms/noms de **3 à 6 élèves**. L'export PDF reprend tous les noms et la classe. Le bouton d'export reste bloqué tant que l'identité, les questions, les mécanismes, le tri, la carte et la conclusion ne sont pas complets.
+En haut à droite, le binôme renseigne sa classe et les prénoms/noms de **deux élèves**. L'export PDF reprend les deux noms et la classe. Le bouton d'export, comme l'envoi au professeur, reste bloqué tant que l'identité, les questions, les mécanismes, le tri, la carte et la conclusion ne sont pas complets.
+
+## Envoi au professeur et correction
+
+Aucun serveur, aucun compte. La remise passe par un **lien de correction** que le binôme copie et transmet (ENT, messagerie, QR code).
+
+1. Dans l'étape 6, le binôme clique sur **Envoyer au professeur** une fois le dossier complet.
+2. Une fenêtre affiche un **lien** contenant toute la copie (compressée et encodée dans l'adresse) et un **code** de secours, plus un fichier JSON téléchargeable. Le lien fait environ 2 000 caractères : c'est prévu pour être copié-collé, pas pour être retapé.
+3. Le professeur ouvre le lien, ou colle le lien/le code dans l'onglet **Correction**.
+4. La copie s'affiche : réponses du binôme, **barème** à côté de chaque question, **case de points** et **correction rédigée** sous chaque question.
+5. Les points sont enregistrés automatiquement sur l'appareil du professeur ; le total sur 20 se met à jour en direct.
+6. **Exporter les notes** produit un fichier CSV (classe, binôme, points par item, total) ouvrable dans un tableur.
+
+Le barème totalise 20 points : 12 questions × 0,5 = 6 pts, 6 mécanismes × 0,5 = 3 pts, 12 éléments de tri × 0,25 = 3 pts, carte mentale 4 pts, conclusion 4 pts. Les corrections sont définies dans `content.js` (`points` et `correction` sur chaque question, bloc `EVALUATION`).
+
+Les copies reçues et les notes restent dans le navigateur du professeur. Il est conseillé d'exporter le CSV en fin de séance.
 
 ## Les quatre dossiers
 
@@ -79,11 +95,12 @@ GitHub Pages reconstruit automatiquement le site.
 ## Structure
 
 ```text
-index.html      structure des six étapes et des dialogues
+index.html      structure des sept étapes et des dialogues
 styles.css      base visuelle, responsive, styles d'impression
 theme.css       thème « dossier d'archives » (pochettes, boîte à outils, filigrane)
-content.js      contenus historiques, questions, glossaire, bibliographie
-app.js          logique du parcours, identité du groupe, sauvegarde, export
+correction.css  espace professeur : copies reçues, barème, saisie des points
+content.js      contenus historiques, questions, barème, corrections, glossaire, bibliographie
+app.js          logique du parcours, identité du binôme, sauvegarde, export, remise, correction
 map.js          canevas de carte mentale et rendu spatial imprimable
 storage.js      IndexedDB avec repli localStorage
 assets/images/  images d'ambiance fournies par l'enseignant
@@ -96,13 +113,16 @@ Le contenu historique est séparé de l'interface : pour corriger un texte, une 
 - **Sauvegarde automatique** : étape atteinte, réponses, tri, carte, réglages, conclusion.
 - **Reprise** : au retour, l'application propose de reprendre ou de recommencer.
 - **Sauvegarde de secours** : fichier JSON téléchargeable et réimportable.
-- **Export PDF** : aperçu, puis impression du navigateur avec « Enregistrer au format PDF ». Le document contient le titre, **les noms des 3 à 6 élèves et la classe**, les réponses aux questions, les choix de mécanismes, le tri, la carte **dans la disposition créée par le groupe sur une page paysage**, le détail des nœuds avec leurs sources, la conclusion et la bibliographie. L'export est bloqué tant que l'identité du groupe, les questions, les mécanismes, le tri, la carte et la conclusion ne sont pas complets.
+- **Export PDF** : aperçu, puis impression du navigateur avec « Enregistrer au format PDF ». Le document contient le titre, **les noms des deux élèves et la classe**, les réponses aux questions, les choix de mécanismes, le tri, la carte **dans la disposition créée par le binôme sur une page paysage**, le détail des nœuds avec leurs sources, la conclusion et la bibliographie. L'export est bloqué tant que l'identité du binôme, les questions, les mécanismes, le tri, la carte et la conclusion ne sont pas complets.
+- **Envoi au professeur** : lien de correction et code de secours (voir plus haut), en plus du PDF si l'établissement préfère le papier.
 
 Les données restent sur l'appareil. Elles peuvent être perdues si le navigateur ou les données du site sont effacés, ou si l'élève change d'appareil. Le cache local ne garantit pas une conservation permanente.
 
 ## Limites connues
 
-- **Pas de compte ni de synchronisation** : la sauvegarde est locale.
+- **Pas de compte ni de synchronisation** : la sauvegarde est locale, et les copies reçues par le professeur restent dans **son** navigateur. Elles ne sont pas centralisées : il faut exporter le CSV et, si besoin, garder les liens reçus.
+- **Remise par lien** : le lien de correction contient les réponses encodées. Il est long ; certaines messageries le coupent. Le code de secours et le fichier JSON permettent de contourner ce problème. Aucune copie ne peut être envoyée directement dans une boîte sans action de l'élève.
+- **Pas de verrouillage des notes** : l'élève peut modifier sa copie localement, mais la copie transmise est figée au moment de l'envoi.
 - **PDF via l'impression du navigateur** : le rendu dépend du navigateur (Chrome, Edge, Firefox). L'aperçu est là pour vérifier avant impression.
 - **Sources secondaires** : EHNE, Histoire par l'image et USHMM sont des analyses d'historiens ; les décrets et lois sont des textes primaires. L'application ne remplace pas un manuel ni une validation par l'enseignant.
 - **Langues** : les dossiers sont en français ; les textes originaux du GHDI sont en allemand et en anglais, et sont reformulés.

@@ -1,0 +1,413 @@
+/* ================================================================== */
+/* Onglet Correction — espace professeur                              */
+/* ================================================================== */
+
+@media screen {
+  .teacher-tab {
+    border-left: 1px solid #c9b18e;
+    margin-left: 4px;
+    color: #6f2b2b;
+  }
+
+  .teacher-tab .step-num {
+    border-color: #6f2b2b;
+  }
+
+  .teacher-tab.is-current {
+    background: #3f2a20;
+    border-color: #3f2a20;
+    color: #fff7e8;
+  }
+
+  .correction-toolbar {
+    background: #fbf4e4;
+    border: 1px solid #b9a17f;
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 5px 14px rgba(60, 42, 24, 0.08);
+  }
+
+  .correction-toolbar .field {
+    margin-bottom: 10px;
+  }
+
+  .correction-toolbar textarea {
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 0.78rem;
+    min-height: 70px;
+    background: #fffaf0;
+    border-color: #c9b18e;
+  }
+
+  .file-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .correction-layout {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .correction-list-panel {
+    background: #fbf4e4;
+    border: 1px solid #b9a17f;
+    border-radius: 4px;
+    padding: 14px;
+    position: sticky;
+    top: 86px;
+    max-height: calc(100vh - 110px);
+    overflow: auto;
+  }
+
+  .correction-list-panel h3 {
+    font-family: "Courier New", monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #7d2f2f;
+    margin: 0 0 10px;
+  }
+
+  .correction-list {
+    display: grid;
+    gap: 6px;
+  }
+
+  .correction-list-item {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    border: 1px solid #d4c2a4;
+    background: #fffaf0;
+    border-radius: 3px;
+    border-left: 4px solid transparent;
+    overflow: hidden;
+  }
+
+  .correction-list-item.is-current {
+    border-left-color: #7d2f2f;
+    background: #fdf3dc;
+  }
+
+  .correction-open {
+    flex: 1;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    color: #2f2418;
+    font: inherit;
+    padding: 8px 9px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 48px;
+  }
+
+  .correction-open strong {
+    font-size: 0.82rem;
+    line-height: 1.2;
+  }
+
+  .correction-open span {
+    font-size: 0.72rem;
+    color: #6f5b40;
+  }
+
+  .correction-list-score {
+    font-family: "Courier New", monospace;
+    color: #7d2f2f !important;
+    font-weight: 700;
+  }
+
+  .correction-delete {
+    border: 0;
+    background: transparent;
+    color: #8b2f2f;
+    font-size: 1rem;
+    width: 28px;
+    cursor: pointer;
+  }
+
+  .correction-view {
+    min-width: 0;
+  }
+
+  .correction-empty {
+    background: #fbf4e4;
+    border: 1px dashed #b9a17f;
+    border-radius: 4px;
+    padding: 26px;
+  }
+
+  .correction-empty h3 {
+    margin-top: 0;
+  }
+
+  .correction-document {
+    background: #fbf4e4;
+    border: 1px solid #b9a17f;
+    border-radius: 4px;
+    padding: 18px 20px 24px;
+    box-shadow: 0 8px 22px rgba(60, 42, 24, 0.1);
+  }
+
+  .correction-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    border-bottom: 2px solid #c9b18e;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+  }
+
+  .correction-head h3 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+  }
+
+  .correction-head .muted {
+    font-size: 0.76rem;
+  }
+
+  .correction-total {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    flex: 0 0 auto;
+    background: #fdf3dc;
+    border: 1px solid #d8bf95;
+    border-radius: 4px;
+    padding: 8px 11px;
+  }
+
+  .correction-total strong {
+    font-family: var(--font-title);
+    font-size: 1.8rem;
+    color: #7d2f2f;
+    line-height: 1;
+  }
+
+  .correction-total span {
+    font-family: "Courier New", monospace;
+    font-size: 0.8rem;
+    color: #6f5b40;
+  }
+
+  .correction-block {
+    margin-top: 18px;
+  }
+
+  .correction-block > h3 {
+    font-family: "Courier New", monospace;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: #7d2f2f;
+    border-bottom: 1px solid #d4c2a4;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+  }
+
+  .correction-block > h4,
+  .correction-dossier > h4 {
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    margin: 14px 0 8px;
+    color: #3f2a20;
+  }
+
+  .correction-item {
+    background: #fffaf0;
+    border: 1px solid #d4c2a4;
+    border-left: 4px solid #b99a70;
+    border-radius: 3px;
+    padding: 11px 13px;
+    margin-bottom: 9px;
+  }
+
+  .correction-item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .correction-label {
+    font-family: "Courier New", monospace;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8b6a3f;
+  }
+
+  .bareme {
+    font-family: "Courier New", monospace;
+    font-size: 0.64rem;
+    color: #6f5b40;
+    white-space: nowrap;
+  }
+
+  .correction-question {
+    font-weight: 650;
+    margin: 0 0 7px;
+    color: #2f2418;
+    font-size: 0.92rem;
+  }
+
+  .correction-answer {
+    background: #f4ead6;
+    border-left: 2px solid #b99a70;
+    padding: 7px 9px;
+    margin-bottom: 8px;
+    font-size: 0.88rem;
+  }
+
+  .correction-answer span,
+  .correction-key span {
+    display: block;
+    font-family: "Courier New", monospace;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8b6a3f;
+    margin-bottom: 2px;
+  }
+
+  .correction-answer p,
+  .correction-key p {
+    margin: 0;
+  }
+
+  .correction-grade {
+    margin-bottom: 8px;
+  }
+
+  .grade-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Courier New", monospace;
+    font-size: 0.7rem;
+    color: #5f4a30;
+    background: #fdf3dc;
+    border: 1px solid #d8bf95;
+    border-radius: 3px;
+    padding: 4px 7px;
+  }
+
+  .grade-input {
+    width: 64px;
+    min-height: 36px;
+    border: 1px solid #b99a70;
+    background: #fff;
+    border-radius: 3px;
+    padding: 4px 6px;
+    font: inherit;
+    font-size: 0.82rem;
+    color: #2f2418;
+    text-align: center;
+  }
+
+  .grade-field .bareme {
+    color: #7d2f2f;
+    font-weight: 700;
+  }
+
+  .correction-key {
+    background: #eef6f0;
+    border: 1px solid #b8cba7;
+    border-left: 4px solid #6f8b5e;
+    border-radius: 3px;
+    padding: 7px 9px;
+    font-size: 0.86rem;
+  }
+
+  .correction-key span {
+    color: #31502c;
+  }
+
+  .correction-map {
+    border: 1px solid #c9b18e;
+    background: #fff;
+    padding: 8px;
+    overflow: auto;
+    max-height: 440px;
+    margin-bottom: 8px;
+  }
+
+  .correction-map svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .correction-total-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-top: 2px solid #c9b18e;
+    margin-top: 18px;
+    padding-top: 12px;
+  }
+
+  .correction-total-line strong {
+    font-family: var(--font-title);
+    font-size: 1.15rem;
+    color: #2f2418;
+  }
+
+  .correction-total-line #correctionTotalBottom {
+    color: #7d2f2f;
+  }
+}
+
+@media screen and (max-width: 1100px) {
+  .correction-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .correction-list-panel {
+    position: static;
+    max-height: none;
+  }
+
+  .correction-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media screen and (max-width: 680px) {
+  .correction-list {
+    grid-template-columns: 1fr;
+  }
+
+  .correction-head {
+    flex-direction: column;
+  }
+
+  .correction-document {
+    padding: 14px;
+  }
+
+  .correction-total-line {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .correction-total-line .button {
+    width: 100%;
+  }
+}

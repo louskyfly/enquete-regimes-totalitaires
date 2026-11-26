@@ -183,6 +183,14 @@
     padding-top: 7px;
   }
 
+  .identity-hint {
+    margin: 6px 0 0;
+    font-family: "Courier New", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: #8b6a3f;
+  }
+
   .identity-body .field {
     margin-bottom: 8px;
   }

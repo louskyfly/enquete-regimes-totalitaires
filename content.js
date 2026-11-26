@@ -2,7 +2,7 @@ export const META = {
   title: "Contrôle — Deux régimes totalitaires",
   subtitle: "L'URSS de Staline et l'Allemagne nazie",
   level: "Troisième",
-  version: "1.2",
+  version: "1.3",
   updated: "26 novembre 2026"
 };
 
@@ -15,7 +15,7 @@ export const BRIEFING = {
     "Comparer l'URSS de Staline et l'Allemagne nazie à partir de quatre dossiers, puis construire une carte mentale sourcée.",
   intro: [
     "Ce contrôle porte sur deux régimes totalitaires de l'entre-deux-guerres : l'URSS de Staline et l'Allemagne nazie. Il ne s'agit pas de les mettre sur le même plan, mais de comparer leur fonctionnement, leurs idéologies et leurs violences.",
-    "Vous travaillez à partir de quatre dossiers courts. Le tableau de synthèse fourni est un point de départ : il faut le vérifier. Les réponses, le tri et la carte sont enregistrés dans le navigateur ; le PDF final reprend la carte du groupe, les réponses et les sources."
+    "Vous travaillez à partir de quatre dossiers courts. Le tableau de synthèse fourni est un point de départ : il faut le vérifier. Les réponses, le tri et la carte sont enregistrés dans le navigateur ; le PDF final reprend la carte du binôme, les réponses et les sources. À la fin, un lien de correction permet d'envoyer la copie au professeur."
   ],
   objectives: [
     "Lire quatre dossiers courts et identifier leur nature, leur auteur et leur contexte.",
@@ -30,14 +30,30 @@ export const BRIEFING = {
     "Trier les affirmations.",
     "Créer la carte à partir du tri.",
     "Rédiger la conclusion.",
-    "Exporter le dossier."
+    "Exporter le dossier ou l'envoyer au professeur."
   ],
   rules:
-    "Vous travaillez en groupe de 3 à 6 élèves. Renseignez la classe et les noms en haut à droite. Le PDF n'est accessible que lorsque le dossier est complet : identité, questions, mécanismes, tri, carte et conclusion.",
+    "Vous travaillez en binôme (2 élèves). Renseignez la classe et les deux noms en haut à droite. Durée : 1 heure. Le PDF et l'envoi au professeur ne sont accessibles que lorsque le dossier est complet : identité, questions, mécanismes, tri, carte et conclusion.",
   warning:
     "Certains documents contiennent des symboles ou des propos difficiles. Ils sont étudiés comme des documents historiques, avec des précautions.",
   method:
     "Chaque idée de la carte doit être reliée à un dossier ou à un document. Une affirmation sans source est une hypothèse à vérifier."
+};
+
+export const EVALUATION = {
+  questionPoints: 0.5,
+  mechanismPoints: 0.5,
+  sortPoints: 0.25,
+  map: {
+    points: 4,
+    correction:
+      "La carte doit partir du sujet central, distinguer les points communs, l'URSS, l'Allemagne nazie et les éléments à vérifier ou à nuancer. Les liens doivent être lisibles, les idées précises et au moins cinq nœuds doivent porter une source."
+  },
+  conclusion: {
+    points: 4,
+    correction:
+      "La conclusion doit comparer les deux régimes : un point commun, une différence idéologique, une différence de cible ou d'économie, et une phrase qui refuse de les confondre. Trois à cinq phrases suffisent."
+  }
 };
 
 export const DOSSIERS = [
@@ -82,25 +98,28 @@ export const DOSSIERS = [
         id: "urss-q1",
         prompt: "Qui détient le pouvoir ? Comment Staline s'impose-t-il ?",
         hint: "Appuie-toi sur les dates : 1922, 1924, 1929.",
-        placeholder: "Je repère que..."
+        placeholder: "Je repère que...",
+        points: 0.5,
+        correction:
+          "Staline et le Parti communiste détiennent le pouvoir. Secrétaire général depuis 1922, Staline écarte ses rivaux puis impose son pouvoir personnel après 1929. Le parti unique contrôle l'État, la presse, les syndicats et les organisations de jeunesse."
       },
       {
         id: "urss-q2",
         prompt: "Quels groupes sont frappés par la collectivisation et la Grande Terreur ?",
         hint: "Cherche les mots « koulaks », « ennemis du peuple », « NKVD ».",
-        placeholder: "Les victimes sont..."
+        placeholder: "Les victimes sont...",
+        points: 0.5,
+        correction:
+          "La collectivisation frappe les koulaks et les paysans qui résistent ; la Grande Terreur frappe les anciens opposants, les cadres du parti, des minorités nationales et des citoyens ordinaires dénoncés comme « ennemis du peuple ». Les victimes sont déportées au Goulag ou exécutées."
       },
       {
         id: "urss-q3",
         prompt: "La Constitution de 1936 limite-t-elle le pouvoir de Staline ? Justifie avec les deux extraits.",
         hint: "Compare ce que le texte proclame et ce que dit le second extrait.",
-        placeholder: "Le texte proclame..., mais..."
-      },
-      {
-        id: "urss-q4",
-        prompt: "Comment le régime associe-t-il propagande et violence ?",
-        hint: "Cherche le culte de Staline et les réalisations célébrées.",
-        placeholder: "D'un côté..., de l'autre..."
+        placeholder: "Le texte proclame..., mais...",
+        points: 0.5,
+        correction:
+          "Non. La Constitution proclame des droits et le suffrage universel, mais le parti unique, la censure et la police politique (NKVD) empêchent leur application. Les élections ne sont pas concurrentielles : le texte sert aussi de façade."
       }
     ],
     takeaway:
@@ -151,25 +170,28 @@ export const DOSSIERS = [
         id: "all-q1",
         prompt: "Hitler a-t-il été élu chancelier ? Justifie.",
         hint: "Relis la première phrase du dossier.",
-        placeholder: "Non, car..."
+        placeholder: "Non, car...",
+        points: 0.5,
+        correction:
+          "Non. Hitler est nommé chancelier par le président Hindenburg le 30 janvier 1933. Le NSDAP obtient 43,9 % des voix le 5 mars 1933, sans majorité absolue : il n'a jamais été élu chancelier."
       },
       {
         id: "all-q2",
         prompt: "Quelles étapes lui permettent de concentrer le pouvoir entre janvier 1933 et août 1934 ?",
         hint: "Repère au moins quatre dates et ce qui se passe à chaque fois.",
-        placeholder: "D'abord..., ensuite..., puis..."
+        placeholder: "D'abord..., ensuite..., puis...",
+        points: 0.5,
+        correction:
+          "30 janvier 1933 : nomination comme chancelier ; 27-28 février : incendie du Reichstag ; 28 février : décret qui suspend les libertés ; 5 mars : élections ; 23 mars : loi des pleins pouvoirs ; août 1934 : mort de Hindenburg, Hitler cumule chancelier et président et prend le titre de Führer."
       },
       {
         id: "all-q3",
         prompt: "Pourquoi le décret du 28 février 1933 est-il un tournant ?",
         hint: "Que suspend-il ? Contre qui est-il utilisé ?",
-        placeholder: "Ce décret..."
-      },
-      {
-        id: "all-q4",
-        prompt: "Pourquoi parle-t-on d'une conquête « légale » du pouvoir ?",
-        hint: "Quels outils juridiques sont utilisés ?",
-        placeholder: "Le régime utilise..."
+        placeholder: "Ce décret...",
+        points: 0.5,
+        correction:
+          "Il suspend les principales libertés de la Constitution de Weimar (articles 114, 115, 117, 118, 123, 124 et 153) et permet les arrestations massives, notamment des communistes et des sociaux-démocrates. La violence devient légale."
       }
     ],
     takeaway:
@@ -211,25 +233,28 @@ export const DOSSIERS = [
         id: "race-q1",
         prompt: "Quelle différence la loi fait-elle entre « citoyen » et « sujet de l'État » ?",
         hint: "Cherche les droits politiques.",
-        placeholder: "Le citoyen..., le sujet..."
+        placeholder: "Le citoyen..., le sujet...",
+        points: 0.5,
+        correction:
+          "Le citoyen du Reich est une personne de « sang allemand ou apparenté » qui possède les droits politiques. Le sujet de l'État est privé de la citoyenneté et des droits politiques : les Juifs sont placés dans cette catégorie inférieure."
       },
       {
         id: "race-q2",
         prompt: "Comment le régime définit-il qui est juif ? Pourquoi est-ce une définition raciale ?",
         hint: "Le critère est-il la religion ou l'ascendance ?",
-        placeholder: "La loi se fonde sur..."
+        placeholder: "La loi se fonde sur...",
+        points: 0.5,
+        correction:
+          "La loi et ses décrets définissent le Juif par le nombre de grands-parents juifs (trois ou quatre, avec des cas particuliers). Le critère est l'ascendance, pas la religion : c'est une définition raciale et pseudo-scientifique."
       },
       {
         id: "race-q3",
         prompt: "En quoi ces lois révèlent-elles l'idéologie nazie ?",
         hint: "Relie-les à l'antisémitisme et à la hiérarchie des races.",
-        placeholder: "Ces lois montrent que..."
-      },
-      {
-        id: "race-q4",
-        prompt: "Pourquoi 1935 n'est-elle qu'une étape ?",
-        hint: "Que se passe-t-il en 1938 et après 1941 ?",
-        placeholder: "Après 1935..."
+        placeholder: "Ces lois montrent que...",
+        points: 0.5,
+        correction:
+          "Elles inscrivent dans le droit la hiérarchie des « races », l'antisémitisme et l'exclusion des Juifs. Elles légitiment la persécution, préparent la spoliation et la ségrégation, et s'inscrivent dans un processus qui conduit au génocide."
       }
     ],
     takeaway:
@@ -272,25 +297,28 @@ export const DOSSIERS = [
         id: "comp-q1",
         prompt: "Quels moyens communs les deux pavillons utilisent-ils ?",
         hint: "Regarde la taille, la symétrie, les symboles.",
-        placeholder: "Les deux..."
+        placeholder: "Les deux...",
+        points: 0.5,
+        correction:
+          "Les deux pavillons utilisent la verticalité, la symétrie, la démesure, des matériaux massifs, des symboles et une mise en scène de la foule. Ils cherchent à impressionner les visiteurs et à montrer la puissance du régime."
       },
       {
         id: "comp-q2",
         prompt: "Qu'est-ce qui distingue leurs messages ?",
         hint: "Compare la sculpture soviétique et l'aigle allemand.",
-        placeholder: "Le pavillon soviétique..., tandis que..."
+        placeholder: "Le pavillon soviétique..., tandis que...",
+        points: 0.5,
+        correction:
+          "L'URSS célèbre les travailleurs, l'industrie et le progrès : L'Ouvrier et la kolkhozienne associent un ouvrier et une paysanne. L'Allemagne nazie célèbre la communauté raciale, la guerre et le chef : l'aigle, la croix gammée et le néoclassicisme disent la domination."
       },
       {
         id: "comp-q3",
         prompt: "Pourquoi cette photographie est-elle une source sur la propagande ?",
         hint: "Qui a commandé ces bâtiments ? Dans quel but ?",
-        placeholder: "Cette image..."
-      },
-      {
-        id: "comp-q4",
-        prompt: "Que ne montre pas la photographie ?",
-        hint: "Pense au cadrage, aux visiteurs, au contexte de l'Exposition.",
-        placeholder: "On ne voit pas..."
+        placeholder: "Cette image...",
+        points: 0.5,
+        correction:
+          "Ce sont des bâtiments officiels commandés par les deux régimes pour l'Exposition de 1937. Leur but est de montrer la puissance et la modernité. La photographie est donc un document de propagande : elle ne prouve pas à elle seule la réalité sociale ou économique."
       }
     ],
     takeaway:
@@ -303,6 +331,7 @@ export const MECHANISMS = [
     id: "m1",
     label: "Un parti unique dirige l'État et la société.",
     answer: "both",
+    points: 0.5,
     feedback:
       "Oui, dans les deux cas. En URSS, le Parti communiste encadre l'État et les organisations. En Allemagne, le NSDAP devient le seul parti autorisé en 1933 et noyaute l'administration, la police et les organisations de masse."
   },
@@ -310,6 +339,7 @@ export const MECHANISMS = [
     id: "m2",
     label: "Le chef fait l'objet d'un culte organisé.",
     answer: "both",
+    points: 0.5,
     feedback:
       "Staline et Hitler sont présentés comme des figures exceptionnelles, au-dessus des institutions. Les images, les meetings et les récits officiels construisent ce culte."
   },
@@ -317,6 +347,7 @@ export const MECHANISMS = [
     id: "m3",
     label: "Une police politique arrête sans procès et envoie dans des camps.",
     answer: "both",
+    points: 0.5,
     feedback:
       "Le NKVD et la Gestapo/SS partagent la détention arbitraire et le camp. Mais les cibles et les logiques diffèrent : classe et « ennemi du peuple » en URSS, race et opposition politique en Allemagne."
   },
@@ -324,6 +355,7 @@ export const MECHANISMS = [
     id: "m4",
     label: "L'économie est collectivisée et planifiée par l'État.",
     answer: "urss",
+    points: 0.5,
     feedback:
       "En URSS : nationalisation, collectivisation et plans quinquennaux. En Allemagne, la propriété privée est maintenue, même si l'État dirige l'économie vers l'autarcie et la guerre."
   },
@@ -331,6 +363,7 @@ export const MECHANISMS = [
     id: "m5",
     label: "La propriété privée est maintenue, mais l'État oriente l'économie vers la guerre.",
     answer: "allemagne",
+    points: 0.5,
     feedback:
       "C'est le cas nazi : les entreprises privées restent, mais le plan de quatre ans (1936), l'autarcie et le réarmement orientent la production."
   },
@@ -338,30 +371,10 @@ export const MECHANISMS = [
     id: "m6",
     label: "La loi définit les droits selon l'appartenance « raciale ».",
     answer: "allemagne",
+    points: 0.5,
     feedback:
       "Les lois de Nuremberg (1935) en sont l'exemple. L'URSS définit officiellement les droits selon la classe sociale, pas selon une « race »."
   },
-  {
-    id: "m7",
-    label: "Une constitution proclame des libertés qui ne sont pas respectées.",
-    answer: "urss",
-    feedback:
-      "La Constitution soviétique de 1936 proclame des droits et le suffrage universel ; la réalité est celle du parti unique, de la censure et de la terreur. En Allemagne, la Constitution de Weimar est suspendue, pas simplement vidée de son sens."
-  },
-  {
-    id: "m8",
-    label: "L'ennemi principal est défini par la classe sociale.",
-    answer: "urss",
-    feedback:
-      "La lutte des classes structure la propagande et la répression soviétiques : koulaks, bourgeois, « ennemis du peuple ». Le nazisme définit l'ennemi par la race."
-  },
-  {
-    id: "m9",
-    label: "La propagande utilise des images de masse et des symboles.",
-    answer: "both",
-    feedback:
-      "Les deux régimes utilisent affiches, photographies, meetings, défilés et symboles. Les contenus et les esthétiques diffèrent."
-  }
 ];
 
 export const SORT_COLUMNS = [
@@ -377,6 +390,7 @@ export const SORT_ITEMS = [
     text: "Parti unique et chef incontesté",
     nodeTitle: "Parti unique et chef",
     answer: "commun",
+    points: 0.25,
     feedback: "Point commun, mais à préciser : les partis et les modes d'exercice du pouvoir ne sont pas identiques."
   },
   {
@@ -384,6 +398,7 @@ export const SORT_ITEMS = [
     text: "Culte de la personnalité",
     nodeTitle: "Culte de la personnalité",
     answer: "commun",
+    points: 0.25,
     feedback: "Point commun : les deux régimes organisent des images et des récits qui exaltent le chef."
   },
   {
@@ -391,6 +406,7 @@ export const SORT_ITEMS = [
     text: "Police politique et camps",
     nodeTitle: "Police politique et camps",
     answer: "commun",
+    points: 0.25,
     feedback: "Point commun : détention arbitraire et camps. Les cibles et les logiques restent différentes."
   },
   {
@@ -398,6 +414,7 @@ export const SORT_ITEMS = [
     text: "Collectivisation des terres et plans quinquennaux",
     nodeTitle: "Collectivisation et plans",
     answer: "urss",
+    points: 0.25,
     feedback: "Propre à l'URSS : nationalisation, collectivisation, plans quinquennaux."
   },
   {
@@ -405,6 +422,7 @@ export const SORT_ITEMS = [
     text: "Lois raciales de Nuremberg (1935)",
     nodeTitle: "Lois de Nuremberg",
     answer: "allemagne",
+    points: 0.25,
     feedback: "Propre à l'Allemagne nazie : la loi y définit les droits selon la « race »."
   },
   {
@@ -412,6 +430,7 @@ export const SORT_ITEMS = [
     text: "Autarcie et réarmement",
     nodeTitle: "Autarcie et réarmement",
     answer: "allemagne",
+    points: 0.25,
     feedback: "Propre à l'Allemagne nazie : économie privée encadrée, autarcie, préparation de la guerre."
   },
   {
@@ -419,34 +438,15 @@ export const SORT_ITEMS = [
     text: "Goulag et Grande Terreur (1937-1938)",
     nodeTitle: "Goulag et Grande Terreur",
     answer: "urss",
+    points: 0.25,
     feedback: "Propre à l'URSS : répression de masse du NKVD et système du Goulag."
-  },
-  {
-    id: "s8",
-    text: "Hitler nommé chancelier par Hindenburg en 1933",
-    nodeTitle: "Hitler nommé chancelier",
-    answer: "allemagne",
-    feedback: "Propre à l'Allemagne nazie : Hitler est nommé, pas élu."
-  },
-  {
-    id: "s9",
-    text: "Propagande de masse et mise en scène des foules",
-    nodeTitle: "Propagande de masse",
-    answer: "commun",
-    feedback: "Point commun : affiches, meetings, défilés, symboles. Les messages diffèrent."
-  },
-  {
-    id: "s10",
-    text: "Les deux régimes sont identiques",
-    nodeTitle: "Les régimes sont identiques ?",
-    answer: "nuance",
-    feedback: "Faux. Ils partagent des techniques de domination, mais leurs idéologies, leurs cibles et leurs histoires diffèrent."
   },
   {
     id: "s11",
     text: "Le nazisme est un socialisme parce que le parti s'appelle NSDAP",
     nodeTitle: "Le nazisme est-il socialiste ?",
     answer: "nuance",
+    points: 0.25,
     feedback: "Faux. Le nom du parti ne définit pas son économie : l'Allemagne nazie maintient la propriété privée et réprime les syndicats et la gauche."
   },
   {
@@ -454,6 +454,7 @@ export const SORT_ITEMS = [
     text: "La famine de 1932-1933 a fait environ 7 millions de morts",
     nodeTitle: "Famine de 1932-1933",
     answer: "urss",
+    points: 0.25,
     feedback: "C'est une estimation d'historiens (EHNE), à présenter comme telle."
   },
   {
@@ -461,20 +462,15 @@ export const SORT_ITEMS = [
     text: "L'extermination des Juifs d'Europe fait 6 millions de victimes",
     nodeTitle: "Génocide des Juifs d'Europe",
     answer: "allemagne",
+    points: 0.25,
     feedback: "Génocide planifié et exécuté par l'Allemagne nazie et ses complices, surtout entre 1941 et 1945."
-  },
-  {
-    id: "s14",
-    text: "Staline arrive au pouvoir en 1924",
-    nodeTitle: "Staline arrive en 1924 ?",
-    answer: "nuance",
-    feedback: "Imprécis. Lénine meurt en 1924, mais Staline est secrétaire général depuis 1922 et construit son pouvoir personnel jusqu'en 1929."
   },
   {
     id: "s15",
     text: "Une affiche du parti montre le chef acclamé par la foule : elle prouve que tout le peuple l'admire.",
     nodeTitle: "Une affiche = l'opinion du peuple ?",
     answer: "nuance",
+    points: 0.25,
     feedback:
       "C'est de la propagande : l'affiche montre ce que le parti veut faire croire, pas l'opinion réelle de toute la population. Il faut la confronter à d'autres sources."
   },
@@ -483,6 +479,7 @@ export const SORT_ITEMS = [
     text: "Un journal officiel du parti présente les réalisations du régime : c'est un témoignage neutre.",
     nodeTitle: "Un journal du parti = neutre ?",
     answer: "nuance",
+    points: 0.25,
     feedback:
       "Non : un journal officiel est un média de propagande. Il donne la version du parti et doit être identifié comme tel, puis comparé à d'autres documents."
   }
