@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Enquête historique et carte mentale comparant l'URSS de Staline et l'Allemagne nazie, pour des élèves de troisième." />
+  <title>Enquête sur deux régimes totalitaires — URSS de Staline / Allemagne nazie</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:," />
+</head>
+<body>
+  <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+  <header class="app-header">
+    <div class="brand">
+      <p class="brand-kicker">Dossier d'enquête · Histoire · Troisième</p>
+      <h1>Deux régimes totalitaires</h1>
+      <p class="brand-sub">L'URSS de Staline et l'Allemagne nazie</p>
+    </div>
+    <div class="header-tools">
+      <label class="name-field">
+        <span>Ton nom (pour l'export)</span>
+        <input id="studentName" type="text" maxlength="60" autocomplete="off" placeholder="Prénom ou initiales" />
+      </label>
+      <div class="header-actions">
+        <button type="button" class="button ghost small" data-open="glossaryDialog">Glossaire</button>
+        <button type="button" class="button ghost small" data-open="helpDialog">Aide</button>
+        <button type="button" class="button ghost small" id="backupButton">Sauvegarde</button>
+      </div>
+      <p class="save-status" id="saveStatus" role="status" aria-live="polite">Prêt.</p>
+    </div>
+  </header>
+
+  <nav class="stepper" aria-label="Étapes du parcours">
+    <ol id="stepperList">
+      <li><button type="button" class="step-button" data-step-target="0"><span class="step-num">1</span><span>Briefing</span></button></li>
+      <li><button type="button" class="step-button" data-step-target="1"><span class="step-num">2</span><span>Enquête</span></button></li>
+      <li><button type="button" class="step-button" data-step-target="2"><span class="step-num">3</span><span>Mécanismes</span></button></li>
+      <li><button type="button" class="step-button" data-step-target="3"><span class="step-num">4</span><span>Comparer</span></button></li>
+      <li><button type="button" class="step-button" data-step-target="4"><span class="step-num">5</span><span>Carte</span></button></li>
+      <li><button type="button" class="step-button" data-step-target="5"><span class="step-num">6</span><span>Vérifier</span></button></li>
+    </ol>
+    <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  </nav>
+
+  <main id="main">
+    <!-- ÉTAPE 0 : BRIEFING -->
+    <section class="step is-active" id="step-0" data-step="0" aria-labelledby="step0-title">
+      <div class="step-head">
+        <p class="kicker">Étape 1 · Briefing</p>
+        <h2 id="step0-title" tabindex="-1">La mission</h2>
+        <p class="lead" id="briefingMission"></p>
+      </div>
+
+      <div class="grid two">
+        <article class="card paper">
+          <h3>Ce que tu dois produire</h3>
+          <ul class="check-list" id="objectivesList"></ul>
+        </article>
+        <article class="card paper caution">
+          <h3>Avant de commencer</h3>
+          <p id="briefingWarning"></p>
+          <p class="muted" id="briefingMethod"></p>
+        </article>
+      </div>
+
+      <div class="callout">
+        <strong>Le tableau de synthèse n'est pas une vérité toute faite.</strong>
+        <p>Il donne des pistes. Ton travail consiste à vérifier ses affirmations avec des documents, puis à construire une carte qui distingue les points communs, les éléments propres à chaque régime et ce qui doit être nuancé.</p>
+      </div>
+
+      <div class="step-actions">
+        <button type="button" class="button primary" data-step-target="1">Commencer l'enquête</button>
+      </div>
+    </section>
+
+    <!-- ÉTAPE 1 : ENQUÊTE -->
+    <section class="step" id="step-1" data-step="1" aria-labelledby="step1-title" hidden>
+      <div class="step-head">
+        <p class="kicker">Étape 2 · Enquête sur les documents</p>
+        <h2 id="step1-title" tabindex="-1">Quatre dossiers, plusieurs preuves</h2>
+        <p class="lead">Ouvre chaque dossier. Lis les deux courts extraits, puis note ce que tu observes. Les questions ne demandent pas de réciter : elles t'aident à relier les faits, les mots et les sources.</p>
+      </div>
+      <div class="dossier-grid" id="dossierGrid"></div>
+      <details class="sources-panel">
+        <summary>Sources des quatre dossiers</summary>
+        <ul id="sourcesList"></ul>
+        <p class="hint">Les notices EHNE, Histoire par l'image et USHMM sont des analyses d'historiens. Les décrets, lois et textes constitutionnels sont des sources primaires, cités d'après des éditions universitaires ou muséales. Les textes du GHDI, en allemand et en anglais, sont reformulés en français dans les dossiers.</p>
+      </details>
+      <div class="step-actions">
+        <button type="button" class="button secondary" data-step-target="0">Retour</button>
+        <button type="button" class="button primary" data-step-target="2">Passer aux mécanismes</button>
+      </div>
+    </section>
+
+    <!-- ÉTAPE 2 : MÉCANISMES -->
+    <section class="step" id="step-2" data-step="2" aria-labelledby="step2-title" hidden>
+      <div class="step-head">
+        <p class="kicker">Étape 3 · Repérer les mécanismes</p>
+        <h2 id="step2-title" tabindex="-1">Qui fait quoi, et où ?</h2>
+        <p class="lead">Pour chaque affirmation, choisis le régime concerné. Attention : plusieurs mécanismes sont communs aux deux régimes, mais ils ne fonctionnent pas de la même manière.</p>
+      </div>
+      <div class="mechanism-list" id="mechanismList"></div>
+      <div class="step-actions">
+        <button type="button" class="button secondary" data-step-target="1">Retour</button>
+        <button type="button" class="button primary" data-step-target="3">Passer au tri</button>
+      </div>
+    </section>
+
+    <!-- ÉTAPE 3 : COMPARER -->
+    <section class="step" id="step-3" data-step="3" aria-labelledby="step3-title" hidden>
+      <div class="step-head">
+        <p class="kicker">Étape 4 · Comparer</p>
+        <h2 id="step3-title" tabindex="-1">Trier, distinguer, nuancer</h2>
+        <p class="lead">Sélectionne un élément, puis clique sur une colonne. Tu peux aussi le glisser. La colonne « À vérifier / à nuancer » accueille les affirmations trop simples ou fausses.</p>
+      </div>
+      <div class="sort-toolbar">
+        <p class="muted" id="sortInstruction" role="status" aria-live="polite">Aucun élément sélectionné.</p>
+        <div class="toolbar-actions">
+          <button type="button" class="button secondary small" id="sortCheck">Vérifier le tri</button>
+          <button type="button" class="button ghost small" id="sortReset">Réinitialiser</button>
+        </div>
+      </div>
+      <div class="sort-pool" id="sortPool" aria-label="Éléments à trier"></div>
+      <div class="sort-board" id="sortBoard"></div>
+      <div class="feedback-panel" id="sortFeedback" aria-live="polite"></div>
+      <div class="step-actions">
+        <button type="button" class="button secondary" data-step-target="2">Retour</button>
+        <button type="button" class="button primary" data-step-target="4">Construire la carte</button>
+      </div>
+    </section>
+
+    <!-- ÉTAPE 4 : CARTE -->
+    <section class="step step-map" id="step-4" data-step="4" aria-labelledby="step4-title" hidden>
+      <div class="step-head compact">
+        <p class="kicker">Étape 5 · Construire la carte mentale</p>
+        <h2 id="step4-title" tabindex="-1">Ton canevas</h2>
+        <p class="lead">Déplace les nœuds, relie-les, ajoute des notes et des sources. Le canevas se déplace en glissant le fond ; la molette zoome.</p>
+      </div>
+
+      <div class="map-toolbar" role="toolbar" aria-label="Outils de la carte">
+        <button type="button" class="button primary small" id="mapAddNode">+ Nœud</button>
+        <button type="button" class="button secondary small" id="mapStartLink">Relier</button>
+        <span class="toolbar-sep" aria-hidden="true"></span>
+        <button type="button" class="button ghost small" id="mapUndo" title="Annuler (Ctrl+Z)">Annuler</button>
+        <button type="button" class="button ghost small" id="mapRedo" title="Rétablir (Ctrl+Y)">Rétablir</button>
+        <span class="toolbar-sep" aria-hidden="true"></span>
+        <button type="button" class="button ghost small" id="mapZoomOut" aria-label="Zoom arrière">−</button>
+        <button type="button" class="button ghost small" id="mapZoomIn" aria-label="Zoom avant">+</button>
+        <button type="button" class="button ghost small" id="mapFit">Ajuster</button>
+        <span class="toolbar-sep" aria-hidden="true"></span>
+        <label class="toolbar-select">
+          <span class="sr-only">Modèle de carte</span>
+          <select id="mapTemplate">
+            <option value="">Modèle…</option>
+            <option value="compare">Comparaison</option>
+            <option value="enquete">Dossiers d'enquête</option>
+            <option value="vide">Vide</option>
+          </select>
+        </label>
+        <button type="button" class="button secondary small" id="mapFromSort">Depuis mon tri</button>
+        <button type="button" class="button ghost small" id="mapOutlineToggle" aria-pressed="false">Vue liste</button>
+      </div>
+
+      <p class="map-status" id="mapStatus" role="status" aria-live="polite"></p>
+
+      <div class="map-layout">
+        <div class="map-stage">
+          <div class="map-viewport" id="mapViewport" tabindex="0"
+               aria-label="Canevas de la carte mentale. Utilise les flèches pour déplacer la vue, plus et moins pour zoomer. Les nœuds sont accessibles avec la touche Tab."
+               aria-describedby="mapKeyboardHelp">
+            <div class="map-world" id="mapWorld">
+              <svg id="mapLinks" class="map-links"></svg>
+              <div id="mapNodes" class="map-nodes"></div>
+            </div>
+            <div class="map-empty" id="mapEmpty">
+              <h3>Choisis un point de départ</h3>
+              <p>Un modèle installe le sujet central et les branches. Tu pourras tout modifier ensuite.</p>
+              <div class="map-empty-actions">
+                <button type="button" class="button primary" data-template="compare">Modèle comparaison</button>
+                <button type="button" class="button secondary" data-template="enquete">Modèle dossiers</button>
+                <button type="button" class="button ghost" data-template="vide">Page blanche</button>
+              </div>
+            </div>
+          </div>
+          <p class="hint" id="mapKeyboardHelp">Clavier : Tab pour parcourir les nœuds, Entrée pour modifier, flèches pour déplacer, <kbd>L</kbd> pour relier, Suppr pour supprimer. <kbd>Ctrl</kbd> + <kbd>Z</kbd> annule.</p>
+        </div>
+        <aside class="map-inspector" id="mapInspector" aria-label="Panneau du nœud sélectionné"></aside>
+      </div>
+
+      <details class="map-outline-panel" id="mapOutlinePanel">
+        <summary>Vue liste accessible (alternative au canevas)</summary>
+        <div id="mapOutline"></div>
+      </details>
+
+      <div class="step-actions">
+        <button type="button" class="button secondary" data-step-target="3">Retour</button>
+        <button type="button" class="button primary" data-step-target="5">Vérifier et conclure</button>
+      </div>
+    </section>
+
+    <!-- ÉTAPE 5 : VÉRIFIER -->
+    <section class="step" id="step-5" data-step="5" aria-labelledby="step5-title" hidden>
+      <div class="step-head">
+        <p class="kicker">Étape 6 · Vérifier et conclure</p>
+        <h2 id="step5-title" tabindex="-1">Avant l'export</h2>
+        <p class="lead">Relis ta carte, vérifie que chaque idée importante a une source, puis rédige une conclusion comparative de trois à cinq phrases.</p>
+      </div>
+
+      <div class="grid two">
+        <article class="card paper">
+          <h3>Checklist de la carte</h3>
+          <ul class="checklist" id="checklist"></ul>
+          <button type="button" class="button secondary small" id="checkRefresh">Mettre à jour la vérification</button>
+        </article>
+        <article class="card paper">
+          <h3>Conclusion comparative</h3>
+          <label class="field">
+            <span class="sr-only">Ta conclusion</span>
+            <textarea id="conclusionInput" rows="8" maxlength="1800" placeholder="En 3 à 5 phrases : quels points communs, quelles différences idéologiques, et pourquoi il ne faut pas confondre les deux régimes ?"></textarea>
+          </label>
+          <p class="hint">Structure possible : 1) un point commun ; 2) une différence d'idéologie ; 3) une différence de cible ou d'économie ; 4) ce qu'il ne faut pas confondre.</p>
+          <p class="muted" id="conclusionCount">0 caractère</p>
+        </article>
+      </div>
+
+      <div class="export-panel">
+        <div>
+          <h3>Exporter ma carte en PDF</h3>
+          <p class="muted">Un aperçu s'ouvre avant l'impression. Dans la fenêtre d'impression, choisis « Enregistrer au format PDF ».</p>
+        </div>
+        <div class="export-actions">
+          <button type="button" class="button primary" id="previewButton">Exporter ma carte en PDF</button>
+          <button type="button" class="button secondary" id="backupButton2">Télécharger une sauvegarde</button>
+          <button type="button" class="button ghost" id="importButton">Importer une sauvegarde</button>
+          <input type="file" id="importInput" accept="application/json,.json" hidden />
+        </div>
+      </div>
+
+      <div class="callout subtle">
+        <strong>Sauvegarde locale.</strong>
+        <p>Ta progression est enregistrée dans ce navigateur, sans compte. Elle peut être perdue si tu effaces les données du site ou si tu changes d'appareil. Télécharge régulièrement une sauvegarde.</p>
+      </div>
+
+      <div class="step-actions">
+        <button type="button" class="button secondary" data-step-target="4">Retour à la carte</button>
+        <button type="button" class="button ghost" id="newActivity">Nouvelle activité</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Enquête historique · Troisième · Sources citées dans l'application et dans l'export.</p>
+    <p class="muted">Aucune image choquante n'est intégrée. Les documents sont accessibles par leurs pages d'origine.</p>
+  </footer>
+
+  <!-- Dialogue de reprise -->
+  <dialog id="resumeDialog" class="modal" aria-labelledby="resumeTitle">
+    <div class="modal-inner">
+      <h2 id="resumeTitle">Un travail sauvegardé existe</h2>
+      <p>Tu peux reprendre là où tu t'es arrêté(e), ou commencer une nouvelle activité. Une nouvelle activité effacera la progression enregistrée dans ce navigateur.</p>
+      <p class="muted" id="resumeMeta"></p>
+      <div class="modal-actions">
+        <button type="button" class="button primary" id="resumeButton">Reprendre</button>
+        <button type="button" class="button secondary" id="restartButton">Nouvelle activité</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Dialogue dossier -->
+  <dialog id="dossierDialog" class="modal modal-wide" aria-labelledby="dossierDialogTitle">
+    <div class="modal-inner">
+      <div class="modal-head">
+        <div>
+          <p class="kicker" id="dossierDialogKicker"></p>
+          <h2 id="dossierDialogTitle"></h2>
+        </div>
+        <button type="button" class="icon-button" id="dossierClose" aria-label="Fermer le dossier">×</button>
+      </div>
+      <div id="dossierContent"></div>
+    </div>
+  </dialog>
+
+  <!-- Dialogue glossaire -->
+  <dialog id="glossaryDialog" class="modal" aria-labelledby="glossaryTitle">
+    <div class="modal-inner">
+      <div class="modal-head">
+        <h2 id="glossaryTitle">Glossaire</h2>
+        <button type="button" class="icon-button" data-close-dialog="glossaryDialog" aria-label="Fermer le glossaire">×</button>
+      </div>
+      <dl class="glossary" id="glossaryList"></dl>
+    </div>
+  </dialog>
+
+  <!-- Dialogue aide -->
+  <dialog id="helpDialog" class="modal" aria-labelledby="helpTitle">
+    <div class="modal-inner">
+      <div class="modal-head">
+        <h2 id="helpTitle">Aide et raccourcis</h2>
+        <button type="button" class="icon-button" data-close-dialog="helpDialog" aria-label="Fermer l'aide">×</button>
+      </div>
+      <h3>Le parcours</h3>
+      <p>Les six étapes se suivent, mais tu peux revenir en arrière à tout moment. Ta progression est enregistrée automatiquement.</p>
+      <h3>Le canevas</h3>
+      <ul class="help-list">
+        <li>Glisse le fond pour déplacer la vue.</li>
+        <li>Molette ou boutons <strong>+</strong> / <strong>−</strong> pour zoomer.</li>
+        <li><strong>+ Nœud</strong> ajoute une idée au centre de la vue.</li>
+        <li>Sélectionne un nœud puis <strong>Relier</strong>, et clique sur le nœud d'arrivée.</li>
+        <li><kbd>Tab</kbd> parcourt les nœuds ; <kbd>Entrée</kbd> ouvre le panneau ; les flèches déplacent ; <kbd>L</kbd> relie ; <kbd>Suppr</kbd> supprime.</li>
+        <li><kbd>Ctrl</kbd> + <kbd>Z</kbd> annule, <kbd>Ctrl</kbd> + <kbd>Y</kbd> rétablit.</li>
+      </ul>
+      <h3>Accessibilité</h3>
+      <p>La <strong>Vue liste</strong> donne une alternative textuelle au canevas. Les catégories sont signalées par une couleur, un symbole et un libellé : la couleur n'est jamais le seul repère.</p>
+      <h3>Sauvegarde</h3>
+      <p>Les données restent dans ce navigateur. Utilise <strong>Sauvegarde</strong> pour télécharger un fichier de secours, et <strong>Importer</strong> pour le restaurer sur un autre appareil.</p>
+    </div>
+  </dialog>
+
+  <!-- Dialogue aperçu PDF -->
+  <dialog id="previewDialog" class="modal modal-wide preview-modal" aria-labelledby="previewTitle">
+    <div class="modal-inner">
+      <div class="modal-head">
+        <div>
+          <p class="kicker">Aperçu avant export</p>
+          <h2 id="previewTitle">Ta carte en PDF</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog="previewDialog" aria-label="Fermer l'aperçu">×</button>
+      </div>
+      <p class="muted">Vérifie la lisibilité. Le PDF contiendra la carte, le détail des nœuds avec leurs sources, ta conclusion et la bibliographie.</p>
+      <div class="preview-body" id="previewBody"></div>
+      <div class="modal-actions sticky-actions">
+        <button type="button" class="button primary" id="printButton">Imprimer / Enregistrer en PDF</button>
+        <button type="button" class="button secondary" data-close-dialog="previewDialog">Fermer</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Document d'impression -->
+  <div id="printDoc" aria-hidden="true"></div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
