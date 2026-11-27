@@ -39,6 +39,51 @@ let selectedSortItem = null;
 let suppressSortClick = false;
 let textOverrides = {};
 let editMode = false;
+const TEACHER_CODE = "314324";
+let teacherMode = (() => {
+  try {
+    return localStorage.getItem("enquete-teacher") === "1";
+  } catch (_) {
+    return false;
+  }
+})();
+
+function applyTeacherMode() {
+  const item = $(".teacher-tab-item");
+  if (item) item.hidden = !teacherMode;
+  if (!teacherMode && state && Number(state.step) === 6) state.step = 0;
+}
+
+function openTeacherDialog() {
+  const dialog = $("#teacherDialog");
+  if (!dialog) return;
+  const input = $("#teacherCodeInput");
+  const message = $("#teacherCodeMessage");
+  if (message) message.textContent = "";
+  if (input) input.value = "";
+  dialog.showModal();
+  setTimeout(() => input && input.focus(), 60);
+}
+
+function submitTeacherCode() {
+  const input = $("#teacherCodeInput");
+  const message = $("#teacherCodeMessage");
+  const value = input ? input.value.trim() : "";
+  if (value !== TEACHER_CODE) {
+    if (message) message.textContent = "Code incorrect.";
+    if (input) input.value = "";
+    return;
+  }
+  teacherMode = true;
+  try {
+    localStorage.setItem("enquete-teacher", "1");
+  } catch (_) {}
+  applyTeacherMode();
+  const dialog = $("#teacherDialog");
+  if (dialog) dialog.close();
+  toast("Espace professeur ouvert.");
+  goToStep(6, false);
+}
 
 /* ---------- Textes modifiables par le professeur ---------- */
 
@@ -1290,6 +1335,10 @@ function renderStep() {
 
 function goToStep(step, focus = true) {
   const next = clamp(Number(step) || 0, 0, 6);
+  if (next === 6 && !teacherMode) {
+    openTeacherDialog();
+    return;
+  }
   state.step = next;
   const toastEl = $("#toast");
   if (toastEl) toastEl.hidden = true;
@@ -2750,6 +2799,20 @@ function bindStatic() {
     event.target.value = "";
   });
 
+  const teacherAccess = $("#teacherAccess");
+  if (teacherAccess) teacherAccess.addEventListener("click", openTeacherDialog);
+  const teacherSubmit = $("#teacherCodeSubmit");
+  if (teacherSubmit) teacherSubmit.addEventListener("click", submitTeacherCode);
+  const teacherInput = $("#teacherCodeInput");
+  if (teacherInput) {
+    teacherInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitTeacherCode();
+      }
+    });
+  }
+
   const editButton = $("#editContentButton");
   if (editButton) editButton.addEventListener("click", () => setEditMode(!editMode));
   const editDone = $("#editDoneButton");
@@ -2801,6 +2864,11 @@ function bindStatic() {
 async function init() {
   bindStatic();
   renderGlossary();
+
+  applyTeacherMode();
+
+  const profParam = new URLSearchParams(window.location.search).get("prof");
+  if (profParam && !teacherMode) setTimeout(openTeacherDialog, 400);
 
   await new Promise((resolve) => {
     if (!window.EnqueteTexts) {

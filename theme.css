@@ -1203,3 +1203,16 @@
     height: 0;
     overflow: hidden;
   }
+
+  .footer-teacher {
+    background: none;
+    border: 0;
+    color: #8b6a3f;
+    font: inherit;
+    font-size: 0.72rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+  }
+  .footer-teacher:hover { color: #7d2f2f; }
+  .teacher-modal .modal-inner { background: #fbf4e4; }

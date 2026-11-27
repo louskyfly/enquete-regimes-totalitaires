@@ -61,7 +61,7 @@
       <li><button type="button" class="step-button" data-step-target="3"><span class="step-num">4</span><span>Comparer</span></button></li>
       <li><button type="button" class="step-button" data-step-target="4"><span class="step-num">5</span><span>Carte</span></button></li>
       <li><button type="button" class="step-button" data-step-target="5"><span class="step-num">6</span><span>Vérifier</span></button></li>
-      <li><button type="button" class="step-button teacher-tab" data-step-target="6"><span class="step-num">7</span><span>Correction</span></button></li>
+      <li class="teacher-tab-item" hidden><button type="button" class="step-button teacher-tab" data-step-target="6"><span class="step-num">7</span><span>Correction</span></button></li>
     </ol>
     <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
   </nav>
@@ -322,6 +322,7 @@
   <footer class="app-footer">
     <p>Enquête historique · Troisième · Sources citées dans l'application et dans l'export.</p>
     <p class="muted">Aucune image choquante n'est intégrée. Les documents sont accessibles par leurs pages d'origine.</p>
+    <p><button type="button" class="footer-teacher" id="teacherAccess">Espace professeur</button></p>
   </footer>
 
   <!-- Dialogue de reprise -->
@@ -472,6 +473,28 @@
 
   <!-- Document d'impression -->
   <div id="printDoc" aria-hidden="true"></div>
+
+  <dialog id="teacherDialog" class="modal teacher-modal" aria-labelledby="teacherTitle">
+    <div class="modal-inner">
+      <div class="modal-head">
+        <div>
+          <p class="kicker">Accès réservé</p>
+          <h2 id="teacherTitle">Espace professeur</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-dialog="teacherDialog" aria-label="Fermer">×</button>
+      </div>
+      <p>Entre le code professeur pour ouvrir l’onglet Correction et corriger les copies.</p>
+      <label class="field">
+        <span>Code</span>
+        <input type="password" id="teacherCodeInput" inputmode="numeric" autocomplete="off" />
+      </label>
+      <p class="hint" id="teacherCodeMessage" role="status" aria-live="polite"></p>
+      <div class="modal-actions">
+        <button type="button" class="button primary" id="teacherCodeSubmit">Ouvrir</button>
+        <button type="button" class="button secondary" data-close-dialog="teacherDialog">Annuler</button>
+      </div>
+    </div>
+  </dialog>
 
   <div class="edit-banner" id="editBanner" hidden>
     <span>Mode édition : clique sur un texte pour le changer.</span>
