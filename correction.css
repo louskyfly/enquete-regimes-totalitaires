@@ -657,3 +657,46 @@
     width: 100%;
   }
 }
+
+/* Édition des textes par le professeur */
+.teacher-tools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+.teacher-tools .hint { margin: 0; max-width: 60ch; }
+
+body.is-edit-mode [data-edit] {
+  outline: 2px dashed #7d2f2f;
+  outline-offset: 2px;
+  background: rgba(255, 250, 240, 0.7);
+  border-radius: 3px;
+  cursor: text;
+  transition: background 0.15s;
+}
+body.is-edit-mode [data-edit]:hover { background: #fff3d8; }
+body.is-edit-mode [data-edit][contenteditable] {
+  outline: 3px solid #7d2f2f;
+  background: #fffaf0;
+}
+
+.edit-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #3f2a20;
+  color: #fff7e8;
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(30, 20, 12, 0.35);
+  font-size: 0.85rem;
+}
+.edit-banner[hidden] { display: none !important; }
+.edit-banner .button { margin: 0; }

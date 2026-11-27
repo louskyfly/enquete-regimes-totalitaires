@@ -282,6 +282,11 @@
         <p class="lead">Ouvre une session : les copies des binômes arrivent ici pendant la séance. Le lien ou le fichier restent possibles en secours.</p>
       </div>
 
+      <div class="teacher-tools">
+        <button type="button" class="button secondary" id="editContentButton">Modifier les textes</button>
+        <p class="hint">Briefing, documents, questions, mécanismes, corrections : ce que tu changes ici s’applique à tous les appareils.</p>
+      </div>
+
       <div class="session-card" id="sessionPanel"></div>
 
       <details class="manual-toolbar">
@@ -468,9 +473,16 @@
   <!-- Document d'impression -->
   <div id="printDoc" aria-hidden="true"></div>
 
+  <div class="edit-banner" id="editBanner" hidden>
+    <span>Mode édition : clique sur un texte pour le changer.</span>
+    <button type="button" class="button small secondary" id="editDoneButton">Terminer</button>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="vendor/qrcode-generator-1.4.4.js"></script>
+  <script src="vendor/mqtt.min.js"></script>
+  <script src="texts.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>

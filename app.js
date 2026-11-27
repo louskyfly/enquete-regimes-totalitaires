@@ -37,6 +37,80 @@ let mapFittedVisible = false;
 let conclusionBound = false;
 let selectedSortItem = null;
 let suppressSortClick = false;
+let textOverrides = {};
+let editMode = false;
+
+/* ---------- Textes modifiables par le professeur ---------- */
+
+function textTarget(key) {
+  const parts = String(key || "").split(".");
+  const root = parts[0];
+  if (root === "briefing") return { obj: BRIEFING, rest: parts.slice(1) };
+  if (root === "evaluation") return { obj: EVALUATION, rest: parts.slice(1) };
+  if (root === "dossier") {
+    const dossier = DOSSIERS.find((d) => d.id === parts[1]);
+    return dossier ? { obj: dossier, rest: parts.slice(2) } : null;
+  }
+  if (root === "question") {
+    for (const dossier of DOSSIERS) {
+      const question = dossier.questions.find((q) => q.id === parts[1]);
+      if (question) return { obj: question, rest: parts.slice(2) };
+    }
+    return null;
+  }
+  if (root === "mechanism") {
+    const mechanism = MECHANISMS.find((m) => m.id === parts[1]);
+    return mechanism ? { obj: mechanism, rest: parts.slice(2) } : null;
+  }
+  if (root === "sort") {
+    const item = SORT_ITEMS.find((i) => i.id === parts[1]);
+    return item ? { obj: item, rest: parts.slice(2) } : null;
+  }
+  return null;
+}
+
+function setTextPath(target, rest, value) {
+  let node = target.obj;
+  for (let i = 0; i < rest.length - 1; i += 1) {
+    node = node[rest[i]];
+    if (node === undefined || node === null) return;
+  }
+  node[rest[rest.length - 1]] = value;
+}
+
+function applyTextOverrides() {
+  Object.entries(textOverrides).forEach(([key, value]) => {
+    if (typeof value !== "string" || !value.trim()) return;
+    const target = textTarget(key);
+    if (!target) return;
+    try {
+      setTextPath(target, target.rest, value);
+    } catch (_) {}
+  });
+}
+
+function saveTextEdit(key, value) {
+  const target = textTarget(key);
+  if (!target) return;
+  try {
+    setTextPath(target, target.rest, value);
+  } catch (_) {}
+  textOverrides[key] = value;
+  if (window.EnqueteTexts) window.EnqueteTexts.save({ ...textOverrides });
+}
+
+function setEditMode(next) {
+  editMode = Boolean(next);
+  document.body.classList.toggle("is-edit-mode", editMode);
+  const button = $("#editContentButton");
+  if (button) button.textContent = editMode ? "Terminer l’édition" : "Modifier les textes";
+  const banner = $("#editBanner");
+  if (banner) banner.hidden = !editMode;
+  if (!editMode) {
+    $('[data-edit][contenteditable]').forEach((el) => el.removeAttribute("contenteditable"));
+  }
+  toast(editMode ? "Clique sur un texte pour le changer." : "Textes enregistrés.");
+}
 let currentDossierId = null;
 let toastTimer = null;
 
@@ -249,6 +323,25 @@ function exportStatus() {
   };
 }
 
+function handleEditClick(event) {
+  if (!editMode) return;
+  const el = event.target.closest("[data-edit]");
+  if (!el) return;
+  event.preventDefault();
+  event.stopPropagation();
+  el.setAttribute("contenteditable", "plaintext-only");
+  el.focus();
+}
+
+function handleEditBlur(event) {
+  const el = event.target.closest("[data-edit][contenteditable]");
+  if (!el) return;
+  const value = el.innerText.replace(/\s+/g, " ").trim();
+  el.removeAttribute("contenteditable");
+  if (!value) return;
+  saveTextEdit(el.dataset.edit, value);
+}
+
 function isTyping() {
   const el = document.activeElement;
   if (!el) return false;
@@ -295,13 +388,33 @@ function scheduleSave() {
 }
 
 function renderBriefing() {
-  $("#briefingMission").textContent = BRIEFING.mission;
-  $("#briefingIntro").innerHTML = BRIEFING.intro.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("");
-  $("#briefingSteps").innerHTML = BRIEFING.steps.map((step) => `<li>${esc(step)}</li>`).join("");
-  $("#briefingRules").textContent = BRIEFING.rules;
-  $("#briefingWarning").textContent = BRIEFING.warning;
-  $("#briefingMethod").textContent = BRIEFING.method;
-  $("#objectivesList").innerHTML = BRIEFING.objectives.map((o) => `<li>${esc(o)}</li>`).join("");
+  const mission = $("#briefingMission");
+  mission.textContent = BRIEFING.mission;
+  mission.dataset.edit = "briefing.mission";
+
+  $("#briefingIntro").innerHTML = BRIEFING.intro
+    .map((paragraph, index) => `<p data-edit="briefing.intro.${index}">${esc(paragraph)}</p>`)
+    .join("");
+
+  $("#briefingSteps").innerHTML = BRIEFING.steps
+    .map((step, index) => `<li data-edit="briefing.steps.${index}">${esc(step)}</li>`)
+    .join("");
+
+  const rules = $("#briefingRules");
+  rules.textContent = BRIEFING.rules;
+  rules.dataset.edit = "briefing.rules";
+
+  const warning = $("#briefingWarning");
+  warning.textContent = BRIEFING.warning;
+  warning.dataset.edit = "briefing.warning";
+
+  const method = $("#briefingMethod");
+  method.textContent = BRIEFING.method;
+  method.dataset.edit = "briefing.method";
+
+  $("#objectivesList").innerHTML = BRIEFING.objectives
+    .map((objective, index) => `<li data-edit="briefing.objectives.${index}">${esc(objective)}</li>`)
+    .join("");
 }
 
 function renderMemberList() {
@@ -419,7 +532,7 @@ function renderDossiers() {
       <span class="dossier-sticker">${esc(d.regime)}</span>
       <div class="dossier-label">
         <p class="dossier-hand">Pièce n° ${String(d.number).padStart(2, "0")} — à examiner</p>
-        <h3>${esc(d.title)}</h3>
+        <h3 data-edit="dossier.${esc(d.id)}.title">${esc(d.title)}</h3>
         <p class="dossier-type">${esc(d.type)}</p>
         <p class="dossier-date">${esc(d.date)}</p>
       </div>
@@ -456,9 +569,11 @@ function openDossier(id) {
 
   const texts = dossier.texts
     .map(
-      (t) => `<section class="doc-text">
-        <h3>${esc(t.title)}</h3>
-        ${t.paragraphs.map((p) => `<p>${esc(p)}</p>`).join("")}
+      (t, ti) => `<section class="doc-text">
+        <h3 data-edit="dossier.${esc(dossier.id)}.texts.${ti}.title">${esc(t.title)}</h3>
+        ${t.paragraphs
+          .map((p, pi) => `<p data-edit="dossier.${esc(dossier.id)}.texts.${ti}.paragraphs.${pi}">${esc(p)}</p>`)
+          .join("")}
       </section>`
     )
     .join("");
@@ -466,7 +581,7 @@ function openDossier(id) {
   const questions = dossier.questions
     .map(
       (q, index) => `<div class="question" data-question="${esc(q.id)}">
-        <label for="answer-${esc(q.id)}"><span class="question-number">Question ${index + 1}</span> ${esc(q.prompt)}</label>
+        <label for="answer-${esc(q.id)}"><span class="question-number">Question ${index + 1}</span> <span data-edit="question.${esc(q.id)}.prompt">${esc(q.prompt)}</span></label>
         <textarea id="answer-${esc(q.id)}" data-qid="${esc(q.id)}" rows="3" maxlength="700" placeholder="${esc(q.placeholder || "Note ce que tu observes...")}">${esc(answers[q.id] || "")}</textarea>
         ${
           CONTROL_MODE
@@ -603,7 +718,7 @@ function renderMechanisms() {
             <span class="tool-number">Outil ${String(index + 1).padStart(2, "0")}</span>
             <span class="tool-icon" aria-hidden="true">${icons[index] || "◆"}</span>
           </div>
-          <p class="mechanism-label">${esc(m.label)}</p>
+          <p class="mechanism-label" data-edit="mechanism.${esc(m.id)}.label">${esc(m.label)}</p>
           <div class="segmented stamp-choices" role="radiogroup" aria-label="${esc(m.label)}">
             ${choices
               .map(
@@ -693,7 +808,7 @@ function renderSort() {
     ? unplaced
         .map(
           (item) => `<div class="sort-item ${selectedSortItem === item.id ? "is-selected" : ""}" data-sort-id="${esc(item.id)}">
-            <button type="button" class="sort-item-main" data-sort-id="${esc(item.id)}">${esc(item.text)}</button>
+            <button type="button" class="sort-item-main" data-sort-id="${esc(item.id)}" data-edit="sort.${esc(item.id)}.text">${esc(item.text)}</button>
           </div>`
         )
         .join("")
@@ -1849,7 +1964,7 @@ function renderCorrectionView() {
             <p class="correction-question">${esc(question.prompt)}</p>
             <div class="correction-answer"><span>Réponse du binôme</span><p>${answer ? esc(answer).replace(/\n/g, "<br>") : "Non répondu."}</p></div>
             <div class="correction-grade">${gradeInput(key, question.points, grades[key])}</div>
-            <div class="correction-key"><span>Correction</span><p>${esc(question.correction || "Correction non renseignée.")}</p></div>
+            <div class="correction-key"><span>Correction</span><p data-edit="question.${esc(question.id)}.correction">${esc(question.correction || "Correction non renseignée.")}</p></div>
           </article>`;
         })
         .join("")}
@@ -1865,7 +1980,7 @@ function renderCorrectionView() {
       <p class="correction-question">${esc(mechanism.label)}</p>
       <div class="correction-answer"><span>Réponse du binôme</span><p>${esc(mechanismLabels[choice] || "Non répondu.")}</p></div>
       <div class="correction-grade">${gradeInput(key, mechanism.points, grades[key])}</div>
-      <div class="correction-key"><span>Correction</span><p>${esc(mechanism.feedback)}</p></div>
+      <div class="correction-key"><span>Correction</span><p data-edit="mechanism.${esc(mechanism.id)}.feedback">${esc(mechanism.feedback)}</p></div>
     </article>`;
   }).join("");
 
@@ -1878,7 +1993,7 @@ function renderCorrectionView() {
       <p class="correction-question">${esc(item.text)}</p>
       <div class="correction-answer"><span>Placement du binôme</span><p>${esc(columnLabel)}</p></div>
       <div class="correction-grade">${gradeInput(key, item.points, grades[key])}</div>
-      <div class="correction-key"><span>Correction</span><p>${esc(item.feedback)}</p></div>
+      <div class="correction-key"><span>Correction</span><p data-edit="sort.${esc(item.id)}.feedback">${esc(item.feedback)}</p></div>
     </article>`;
   }).join("");
 
@@ -1897,7 +2012,7 @@ function renderCorrectionView() {
       <div class="correction-map" role="button" tabindex="0" aria-label="Agrandir la carte mentale">${mapSvg || '<p class="muted">Carte non fournie.</p>'}</div>
       <p class="hint">Clique sur la carte pour l'agrandir (Échap pour fermer).</p>
       <div class="correction-grade">${gradeInput("map", EVALUATION.map.points, grades.map)}</div>
-      <div class="correction-key"><span>Correction</span><p>${esc(EVALUATION.map.correction)}</p></div>
+      <div class="correction-key"><span>Correction</span><p data-edit="evaluation.map.correction">${esc(EVALUATION.map.correction)}</p></div>
     </section>
 
     <section class="correction-block">
@@ -1921,7 +2036,7 @@ function renderCorrectionView() {
         <div class="correction-item-head"><span class="correction-label">Conclusion</span><span class="bareme">Barème : ${formatPoints(EVALUATION.conclusion.points)} pts</span></div>
         <div class="correction-answer"><span>Réponse du binôme</span><p>${sub.conclusion ? esc(sub.conclusion).replace(/\n/g, "<br>") : "Non rédigée."}</p></div>
         <div class="correction-grade">${gradeInput("conclusion", EVALUATION.conclusion.points, grades.conclusion)}</div>
-        <div class="correction-key"><span>Correction</span><p>${esc(EVALUATION.conclusion.correction)}</p></div>
+        <div class="correction-key"><span>Correction</span><p data-edit="evaluation.conclusion.correction">${esc(EVALUATION.conclusion.correction)}</p></div>
       </article>
     </section>
 
@@ -2635,6 +2750,12 @@ function bindStatic() {
     event.target.value = "";
   });
 
+  const editButton = $("#editContentButton");
+  if (editButton) editButton.addEventListener("click", () => setEditMode(!editMode));
+  const editDone = $("#editDoneButton");
+  if (editDone) editDone.addEventListener("click", () => setEditMode(false));
+  document.addEventListener("click", handleEditClick, true);
+  document.addEventListener("focusout", handleEditBlur);
   $("#newActivity").addEventListener("click", () => resetActivity(true));
   const previewButton = $("#previewButton");
   if (previewButton) previewButton.addEventListener("click", openPreview);
@@ -2680,6 +2801,18 @@ function bindStatic() {
 async function init() {
   bindStatic();
   renderGlossary();
+
+  await new Promise((resolve) => {
+    if (!window.EnqueteTexts) {
+      resolve();
+      return;
+    }
+    window.EnqueteTexts.load((loaded) => {
+      textOverrides = loaded || {};
+      applyTextOverrides();
+      resolve();
+    });
+  });
 
   const params = new URLSearchParams(window.location.search);
   const copyParam = params.get("copie");
